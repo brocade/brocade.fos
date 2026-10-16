@@ -1,0 +1,38 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Generate and export CSR
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    generate_inputs:
+      certificate_entity: csr
+      certificate_type: https
+      country_name: US
+      state_name: CA
+      locality_name: SJ
+      organization_name: Broadcom
+      domain_name: 203.0.113.10
+    action_inputs:
+      remote_user_name: user_name
+      remote_host_ip: "198.51.100.254"
+      remote_user_password: password
+      remote_directory: diretory
+      protocol: scp
+      certificate_entity: csr
+      certificate_type: https
+      operation: export
+
+  tasks:
+    - name: CSR generation. Existing CSR is not compared. This task will always change.
+      brocade_security_security_certificate_generate:
+        credential: "{{ credential }}"
+        vfid: -1
+        generate_inputs: "{{ generate_inputs }}"
+
+    - name: CSR export. Existing CSR is not compared. This task will always change.
+      brocade_security_security_certificate_action:
+        credential: "{{ credential }}"
+        vfid: -1
+        action_inputs: "{{ action_inputs }}"

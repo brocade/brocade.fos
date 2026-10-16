@@ -1,0 +1,17 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Delete SSH public key
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    delete_sshutil_public_key:
+      - user_name: "user_name"
+
+  tasks:
+    - name: Delete public keys for admin
+      brocade_security_sshutil_public_key:
+        credential: "{{ credential }}"
+        vfid: -1
+        delete_sshutil_public_key: "{{ delete_sshutil_public_key }}"

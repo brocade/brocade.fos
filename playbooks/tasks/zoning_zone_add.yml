@@ -1,0 +1,52 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Add zones
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    aliases:
+      - name: alias_host_1
+        members:
+          - aa:bb:cc:dd:ee:ff:11:1a
+          - aa:bb:cc:dd:ee:ff:11:1b
+          - aa:bb:cc:dd:ee:ff:11:21
+    zones:
+      - name: zone_3
+        members:
+          - aa:bb:cc:dd:ee:ff:11:1c
+          - aa:bb:cc:dd:ee:ff:11:1d
+          - aa:bb:cc:dd:ee:ff:11:21
+        principal_members:
+          - aa:bb:cc:dd:ee:ff:11:1e
+          - aa:bb:cc:dd:ee:ff:11:1f
+          - aa:bb:cc:dd:ee:ff:11:22
+    cfgs:
+      - name: cfg_1
+        members:
+          - zone_1
+          - zone_2
+          - zone_3
+
+  tasks:
+    - name: After zoning_zone.yml, add aa:bb:cc:dd:ee:ff:11:21 to alias_host_1 by specifying all members
+      brocade_zoning_alias:
+        credential: "{{ credential }}"
+        vfid: -1
+        aliases: "{{ aliases }}"
+
+    - name: >
+        After zoning_zone.yml, add aa:bb:cc:dd:ee:ff:11:21/aa:bb:cc:dd:ee:ff:11:22
+        to zone_3 by specifying all members
+      brocade_zoning_zone:
+        credential: "{{ credential }}"
+        vfid: -1
+        zones: "{{ zones }}"
+
+    - name: After zoning_zone.yml, add zone_3 to cfg_1 by specifying all members and leave it enabled
+      brocade_zoning_cfg:
+        credential: "{{ credential }}"
+        vfid: -1
+        cfgs: "{{ cfgs }}"
+        active_cfg: cfg_1

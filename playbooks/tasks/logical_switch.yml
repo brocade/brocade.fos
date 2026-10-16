@@ -1,0 +1,25 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Configure logical switch
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    non_default_switches:
+      - fabric_id: 1
+        base_switch_enabled: 0
+        ficon_mode_enabled: 0
+        logical_isl_enabled: 1
+        port_member_list:
+          port_member:
+            - "0/0"
+            - "0/1"
+            - "0/2"
+
+  tasks:
+    - name: Configure all non-default logical switch
+      brocade_fibrechannel_logical_switch_fibrechannel_logical_switch:
+        credential: "{{ credential }}"
+        vfid: -1
+        logical_switches: "{{ non_default_switches }}"

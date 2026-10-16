@@ -1,0 +1,18 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Configure access gateway policy
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    policy:
+      auto_policy_enabled: false
+      port_group_policy_enabled: true
+
+  tasks:
+    - name: Ag policy
+      brocade_access_gateway_policy:
+        credential: "{{ credential }}"
+        vfid: -1
+        policy: "{{ policy }}"

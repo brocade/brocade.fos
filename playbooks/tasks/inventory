@@ -1,0 +1,38 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+# Sample inventory for brocade.fos playbooks. Copy this file and add your
+# own switches. ansible_connection stays "local" for every host: these
+# playbooks talk to FOS switches over the REST API, not SSH, so the task
+# itself always runs on the control node.
+#
+# Add more switches under fos_switches.hosts as needed, then target a
+# single one at runtime with:
+#   ansible-playbook <playbook>.yml --limit <hostname>
+
+fos_switches:
+  hosts:
+    switch1:
+      ansible_connection: local
+      credential:
+        fos_ip_addr: "198.51.100.1"
+        fos_user_name: "user_name"
+        fos_password: "user_password"
+        https: "true"
+
+# Used by zoning_migrate.yml, which copies the zone database from one
+# switch (f_credential) to another (t_credential) in a single run.
+zoning_migrate:
+  hosts:
+    zone_migration_app:
+      ansible_connection: local
+      f_credential:
+        fos_ip_addr: "198.51.100.1"
+        fos_user_name: "user_name"
+        fos_password: "user_password"
+        https: "true"
+      t_credential:
+        fos_ip_addr: "198.51.100.3"
+        fos_user_name: "user_name"
+        fos_password: "user_password"
+        https: "true"

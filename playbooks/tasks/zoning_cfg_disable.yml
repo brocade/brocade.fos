@@ -1,0 +1,12 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Disable zone configuration
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+    - name: Disable cfgs
+      brocade_zoning_cfg_disable:
+        credential: "{{ credential }}"
+        vfid: -1

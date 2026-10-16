@@ -1,0 +1,23 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Find device in name server by PID
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    pid_to_search: "0x010b00"
+
+  tasks:
+    - name: Gather facts
+      brocade_list_obj_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade-name-server"
+        list_name: "fibrechannel-name-server"
+        attributes:
+          port_id: "{{ pid_to_search }}"
+
+    - name: Print ansible_facts gathered
+      ansible.builtin.debug:
+        var: ansible_facts

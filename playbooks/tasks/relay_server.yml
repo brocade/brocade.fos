@@ -1,0 +1,22 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Configure relay server
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    maps_config:
+      relay_ip_address: "198.51.100.2"
+      domain_name: "domain2.example.com"
+      sender_address: "sender@domain2.example.com"
+      recipient_address_list:
+        recipient_address:
+          - "receiver@domain2.example.com"
+
+  tasks:
+    - name: Configure relay server
+      brocade_maps_maps_config:
+        credential: "{{ credential }}"
+        vfid: -1
+        maps_config: "{{ maps_config }}"

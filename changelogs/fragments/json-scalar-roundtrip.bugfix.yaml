@@ -1,0 +1,8 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+bugfixes:
+  - brocade_operation_show_status, brocade_operation_firmwaredownload and other modules -
+    preserve native JSON types from FOS REST responses instead of stringifying them,
+    fixing numeric/boolean payload round-trips (for example show-status message-id
+    polling failing with "unknown-attribute").

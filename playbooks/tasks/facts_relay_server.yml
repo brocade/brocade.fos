@@ -1,0 +1,18 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Gather relay server facts
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+    - name: Relay server
+      brocade_singleton_obj_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade-maps"
+        obj_name: "maps-config"
+
+    - name: Print accumulative ansible_facts gathered
+      ansible.builtin.debug:
+        var: ansible_facts

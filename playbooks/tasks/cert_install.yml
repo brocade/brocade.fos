@@ -1,0 +1,26 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Install certificate
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    action_inputs:
+      remote_user_name: user_name
+      remote_host_ip: "198.51.100.254"
+      remote_user_password: user_password_in_clear_text
+      remote_directory: directory_of_cert
+      protocol: scp
+      certificate_entity: cert
+      certificate_type: https
+      certificate_name: cert_name
+      operation: import
+
+  tasks:
+    - name: Cert installation. Existing cert is not compared. This task will always
+        change.
+      brocade_security_security_certificate_action:
+        credential: "{{ credential }}"
+        vfid: -1
+        action_inputs: "{{ action_inputs }}"

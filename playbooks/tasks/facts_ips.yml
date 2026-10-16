@@ -1,0 +1,26 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Gather IPS facts
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+    - name: Gather facts
+      brocade_ips_facts:
+        credential: "{{ credential }}"
+        vfid: "{{ ips_fid }}"
+        gather_subset:
+          - vrf
+          - vlan
+          - staticArp
+          - staticRoute
+          - lag
+          - configuration
+          - interface
+          - arpTable
+          - routeTable
+
+    - name: Print gathered ips ansible_facts
+      ansible.builtin.debug:
+        var: ansible_facts

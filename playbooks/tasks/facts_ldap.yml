@@ -1,0 +1,18 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Gather LDAP facts
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+    - name: Gather facts for brocade_fibrechannel_switch_fibrechannel_switch
+      brocade_list_obj_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade_security"
+        list_name: "ldap_role_map"
+
+    - name: Print ansible_facts gathered
+      ansible.builtin.debug:
+        var: ansible_facts

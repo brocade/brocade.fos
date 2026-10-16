@@ -1,0 +1,24 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Copy zone objects between names
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    copy_list:
+      - current: alias_host_1
+        new: alias_host_1_new
+      - current: zone_3
+        new: zone_3_new
+      - current: cfg_1
+        new: cfg_1_new
+
+  tasks:
+    - name: Walk through the copy_list and copy from current to new
+      brocade_zoning_copy:
+        credential: "{{ credential }}"
+        vfid: -1
+        object_name: "{{ item.current }}"
+        new_name: "{{ item.new }}"
+      loop: "{{ copy_list }}"

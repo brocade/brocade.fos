@@ -1,0 +1,32 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Gather SNMP facts
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+    - name: Snmp system values
+      brocade_singleton_obj_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade-snmp"
+        obj_name: "system"
+
+    - name: SNMP system values
+      brocade_singleton_obj_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade-snmp"
+        obj_name: "system"
+
+    - name: Gather v3 traps
+      brocade_list_obj_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade-snmp"
+        list_name: "v3-trap"
+
+    - name: Print accumulative ansible_facts gathered
+      ansible.builtin.debug:
+        var: ansible_facts

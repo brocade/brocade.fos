@@ -1,0 +1,21 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Configure LDAP server
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+
+    - name: Change
+      brocade_list_obj:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade_security"
+        list_name: "ldap_server"
+        entries:
+          - server: "198.51.100.1"
+            port: 389
+            domain: "local"
+            timeout: 3
+            tls_mode: "starttls"

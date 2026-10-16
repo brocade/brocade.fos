@@ -1,0 +1,18 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Gather SSH public key facts
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+    - name: Gather facts
+      brocade_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        gather_subset:
+          - brocade_security_sshutil_public_key
+
+    - name: Print ansible_facts gathered
+      ansible.builtin.debug:
+        var: ansible_facts

@@ -1,0 +1,23 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Import security crypto config template
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    action_inputs:
+      remote_user_name: user_name
+      remote_host_ip: "198.51.100.254"
+      remote_user_password: "user_password"
+      remote_directory: /directory_path/append_template_name_at_the_end
+      file_transfer_protocol_type: "scp"
+      template_name: new_template_name
+      action: import
+
+  tasks:
+    - name: Import cfg template. warning - this task will always change.
+      brocade_security_sec_crypto_cfg_template_action:
+        credential: "{{ credential }}"
+        vfid: -1
+        action_inputs: "{{ action_inputs }}"

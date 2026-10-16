@@ -1,0 +1,47 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Delete zones
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    aliases_to_delete:
+      - name: alias_host_1
+      - name: alias_target_1
+      - name: alias_target_2
+      - name: alias_target_3
+    zones_to_delete:
+      - name: zone_1
+      - name: zone_2
+      - name: zone_3
+    cfgs_to_delete:
+      - name: Cfg2
+      - name: Cfg3
+
+  tasks:
+    - name: Delete cfg2, & cfg3 and leave cfg1 enabled
+      brocade_zoning_cfg:
+        credential: "{{ credential }}"
+        vfid: -1
+        cfgs_to_delete: "{{ cfgs_to_delete }}"
+        active_cfg: cfg1
+
+    - name: Delete cfg2, & cfg3 and leave cfg_1 enabled
+      brocade_zoning_cfg:
+        credential: "{{ credential }}"
+        vfid: -1
+        cfgs_to_delete: "{{ cfgs_to_delete }}"
+        active_cfg: cfg_1
+
+    - name: Delete alias_host_1, alias_target_1, alias_target_2 and alias_target_3
+      brocade_zoning_alias:
+        credential: "{{ credential }}"
+        vfid: -1
+        aliases_to_delete: "{{ aliases_to_delete }}"
+
+    - name: Delete zone_1, zone_2, and zone_3
+      brocade_zoning_zone:
+        credential: "{{ credential }}"
+        vfid: -1
+        zones_to_delete: "{{ zones_to_delete }}"

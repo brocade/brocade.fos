@@ -1,0 +1,55 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+ancestor: null
+releases:
+  2.2.0:
+    release_date: '2026-06-01'
+    changes:
+      release_summary: Deprecate galaxy branch and convert master to galaxy instead.
+  2.1.0:
+    release_date: '2026-04-30'
+    changes:
+      minor_changes:
+        - Add support for license operations - https://github.com/brocade/ansible/issues/134.
+        - Add code_sanity.py script to validate the codebase for lint violations.
+        - Remove zoning_to_yaml.py utility script to resolve deprecated dependencies.
+      bugfixes:
+        - vfid with no defined-configuration causes brocade_facts.py to crash - https://github.com/brocade/ansible/issues/203.
+        - Meaningless "No start of json char found" error message when SAN switch cannot be connected to - https://github.com/brocade/ansible/issues/204.
+        - Fix typo in brocade_ssh.py module - https://github.com/brocade/ansible/pull/188.
+        - Replaced protocol with protocol_v2 under suppportsave playbook.
+        - Fix majority of lint violations reported by ansible-lint for playbooks and ruff for python files.
+      removed_features:
+        - Remove references to SNMP v1 in the documentation and playbooks since they are obsoleted from FOS 10.x.
+      known_issues:
+        - brocade_fibrechannel_configuration/fabric URI refactoring needs to be handled correctly.
+  2.0.2:
+    release_date: '2025-12-11'
+    changes:
+      bugfixes:
+        - Modify firmwaredownload.yml to handle potential timing issues seen under certain conditions.
+  2.0.1:
+    release_date: '2025-10-08'
+    changes:
+      bugfixes:
+        - brocade_security_certificate_action import cert fails - https://github.com/brocade/ansible/issues/149.
+        - brocade_facts https broken in release 2.0.0 - https://github.com/brocade/ansible/issues/170.
+        - Handle PATCH requests that do not change anything appropriately - https://github.com/brocade/ansible/issues/180.
+        - Modify firmwaredownload.yml to handle potential timing issues seen under certain conditions.
+  2.0.0:
+    release_date: '2025-02-07'
+    changes:
+      major_changes:
+        - A new module brocade_operation is introduced.
+        - Unified Storage Fabric (USF) functionality is supported using the new module
+          brocade_operation — VRF, VLAN, ARP, Interface, StaticRoute, Lag, and TrafficClass
+          operations.
+        - Configupload and configdownload support added via new module brocade_scalar_operation.
+      minor_changes:
+        - shebang updated from python3 to python to support latest Python version.
+        - Documentation updated in playbook to mention renaming of telnet_timeout to shell_timeout.
+        - Masked logging of the password mentioned in the credentials of the playbook.
+      bugfixes:
+        - Issue related to errors sometimes being ignored is fixed by throwing proper error to upper layers.
+        - Corrected typo in logical switch playbook by removing syslog.

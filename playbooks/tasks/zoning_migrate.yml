@@ -1,0 +1,79 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+# This playbook reads the current zone database from a FOS switch and using the facts
+# collected to apply to another FOS switch. f_credential contains ip address, login, and
+# connection type for "from FOS" switch. t_credential contains ip address, login, and
+# connection type for "to FOS" switch. Migrating will be additive to the "to FOS" switch.
+# i.e. Existing aliases, zones and aliases will remain and NOT be deleted. However,
+# overlapping aliases, zone, and alises will be overwritten by the "from FOS" copy and
+# "from FOS" active cfg will be activated.
+#
+# Below is an inventory entry example (see playbooks/tasks/inventory):
+#
+# zoning_migrate:
+#   hosts:
+#     zone_migration_app:
+#       ansible_connection: local
+#       f_credential:
+#         fos_ip_addr: "198.51.100.1"
+#         fos_user_name: "user_name"
+#         fos_password: "user_password"
+#         https: "false"
+#       t_credential:
+#         fos_ip_addr: "198.51.100.3"
+#         fos_user_name: "user_name"
+#         fos_password: "user_password"
+#         https: "false"
+
+- name: Migrate zone database between switches
+  hosts: zoning_migrate
+  gather_facts: false
+
+  tasks:
+    - name: Gather facts from "from FOS" using f_credential
+      brocade_facts:
+        credential: "{{ f_credential }}"
+        vfid: -1
+        gather_subset:
+          - brocade_zoning_simple
+
+    - name: Print ansible_facts gathered
+      ansible.builtin.debug:
+        var: ansible_facts['brocade_zoning_simple']
+
+    - name: Create aliases to "to FOS" using t_credential
+      brocade_zoning_alias:
+        credential: "{{ t_credential }}"
+        vfid: -1
+        aliases: "{{ ansible_facts['brocade_zoning_simple']['defined-configuration']['aliases'] }}"
+      when: ansible_facts['brocade_zoning_simple']['defined-configuration']['aliases'] | length > 0
+
+    - name: Create zones to "to FOS" using t_credential
+      brocade_zoning_zone:
+        credential: "{{ t_credential }}"
+        vfid: -1
+        zones: "{{ ansible_facts['brocade_zoning_simple']['defined-configuration']['zones'] }}"
+      when: ansible_facts['brocade_zoning_simple']['defined-configuration']['zones'] | length > 0
+
+    - name: Create cfgs to "to FOS" using t_credential
+      brocade_zoning_cfg:
+        credential: "{{ t_credential }}"
+        vfid: -1
+        cfgs: "{{ ansible_facts['brocade_zoning_simple']['defined-configuration']['cfgs'] }}"
+      # active_cfg: "{{ ansible_facts['brocade_zoning_simple']['effective-configuration']['cfg_name'] }}"
+      when: ansible_facts['brocade_zoning_simple']['defined-configuration']['cfgs'] | length > 0
+
+    - name: Enable active cfg on "to FOS" using t_credential
+      brocade_zoning_cfg:
+        credential: "{{ t_credential }}"
+        vfid: -1
+        cfgs: "{{ ansible_facts['brocade_zoning_simple']['defined-configuration']['cfgs'] }}"
+        active_cfg: "{{ ansible_facts['brocade_zoning_simple']['effective-configuration']['cfg_name'] }}"
+      when: "'cfg_name' in ansible_facts['brocade_zoning_simple']['effective-configuration']"
+
+#  - name: Default zoning
+#    brocade_zoning_default_zone:
+# credential: "{{ t_credential }}"
+# vfid: -1
+# default_zone_access: allaccess

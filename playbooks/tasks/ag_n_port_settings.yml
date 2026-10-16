@@ -1,0 +1,17 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Configure access gateway N-Port settings
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    n_port_settings:
+      reliability_counter: 25
+
+  tasks:
+    - name: Ag N-Port settings
+      brocade_access_gateway_n_port_settings:
+        credential: "{{ credential }}"
+        vfid: -1
+        n_port_settings: "{{ n_port_settings }}"

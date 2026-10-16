@@ -1,0 +1,51 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Add zone members only
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    aliases:
+      - name: alias_host_1
+        members:
+          - aa:bb:cc:dd:ee:ff:11:21
+    zones:
+      - name: zone_3
+        members:
+          - aa:bb:cc:dd:ee:ff:11:21
+        principal_members:
+          - aa:bb:cc:dd:ee:ff:11:22
+    cfgs:
+      - name: cfg_1
+        members:
+          - zone_3
+
+  tasks:
+    - name: >
+        After zoning_zone.yml, add aa:bb:cc:dd:ee:ff:11:21 to alias_host_1 by
+        specificying the addition only and setting members_add_only to True
+      brocade_zoning_alias:
+        credential: "{{ credential }}"
+        vfid: -1
+        members_add_only: true
+        aliases: "{{ aliases }}"
+
+    - name: >
+        Add aa:bb:cc:dd:ee:ff:11:21/aa:bb:cc:dd:ee:ff:11:22 to zone_3 by
+        specifying the addition only and setting members_add_only to True
+      brocade_zoning_zone:
+        credential: "{{ credential }}"
+        vfid: -1
+        members_add_only: true
+        zones: "{{ zones }}"
+
+    - name: >
+        Add zone_3 to cfg_1 by specifying the addition only an setting
+        members_add_only to True & leave cfg_1 enabled
+      brocade_zoning_cfg:
+        credential: "{{ credential }}"
+        vfid: -1
+        members_add_only: true
+        cfgs: "{{ cfgs }}"
+        active_cfg: cfg_1

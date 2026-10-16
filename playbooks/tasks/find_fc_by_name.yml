@@ -1,0 +1,23 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Find Fibre Channel port by name
+  hosts: fos_switches
+  gather_facts: false
+
+  vars:
+    name_to_search: "0/0"
+
+  tasks:
+    - name: Gather facts
+      brocade_list_obj_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade-interface"
+        list_name: "fibrechannel"
+        attributes:
+          name: "{{ name_to_search }}"
+
+    - name: Print ansible_facts gathered
+      ansible.builtin.debug:
+        var: ansible_facts

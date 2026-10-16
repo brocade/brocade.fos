@@ -1,0 +1,21 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Disable access gateway mode
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+    - name: Disable switch before disabling ag mode
+      brocade_fibrechannel_switch:
+        credential: "{{ credential }}"
+        vfid: -1
+        switch:
+          enabled_state: false
+
+    - name: Disable ag mode. switch will reboot afterward.
+      brocade_fibrechannel_switch:
+        credential: "{{ credential }}"
+        vfid: -1
+        switch:
+          ag_mode: 1

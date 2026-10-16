@@ -1,0 +1,22 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Configure SNMP access control
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+
+    - name: Access control for snmp
+      brocade_list_obj:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade_snmp"
+        list_name: "access_control"
+        entries:
+          - index: 1
+            host: "198.51.100.2"
+            access_level: "ro"
+          - index: 2
+            host: "198.51.100.1"
+            access_level: "rw"

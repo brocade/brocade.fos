@@ -1,0 +1,4 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+requires_ansible: '>=2.16.0'

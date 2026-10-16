@@ -1,0 +1,15 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Configure port name
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+    - name: Set portname - user_friendly_name.
+      brocade_interface_fibrechannel:
+        credential: "{{ credential }}"
+        vfid: -1
+        ports:
+          - name: "0/0"
+            user_friendly_name: "my_port0"

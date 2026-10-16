@@ -1,0 +1,25 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+
+- name: Gather MAPS facts
+  hosts: fos_switches
+  gather_facts: false
+
+  tasks:
+    - name: Gather facts for brocade_maps
+      brocade_list_obj_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade_maps"
+        list_name: "maps_policy"
+
+    - name: Gather facts for brocade_maps rule rule
+      brocade_list_obj_facts:
+        credential: "{{ credential }}"
+        vfid: -1
+        module_name: "brocade_maps"
+        list_name: "rule"
+
+    - name: Print ansible_facts gathered
+      ansible.builtin.debug:
+        var: ansible_facts
