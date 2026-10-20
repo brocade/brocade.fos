@@ -71,9 +71,6 @@ options:
           by BSN REST API with - replaced with _.
           Some examples are
           - chassis_user_friendly_name - chassis name in string
-          - telnet_timeout - shell_timeout is the corresponding REST name.
-                             Displays Bash timeout value in minutes.
-                             Setting this to 0 disables bash timeout.
         required: true
         type: dict
 
@@ -99,7 +96,6 @@ EXAMPLES = """
       vfid: -1
       chassis:
         chassis_user_friendly_name: "chassis_name"
-        telnet_timeout: 30
 
 """
 
@@ -136,7 +132,6 @@ def main():
                 fos_user_name=dict(required=True, type="str"),
                 fos_password=dict(required=True, type="str", no_log=True),
                 https=dict(required=True, type="str"),
-                ssh_hostkeymust=dict(required=False, type="bool"),
             ),
         ),
         vfid=dict(required=False, type="int"),
@@ -154,9 +149,6 @@ def main():
     fos_user_name = input_params["credential"]["fos_user_name"]
     fos_password = input_params["credential"]["fos_password"]
     https = input_params["credential"]["https"]
-    ssh_hostkeymust = True
-    if "ssh_hostkeymust" in input_params["credential"]:
-        ssh_hostkeymust = input_params["credential"]["ssh_hostkeymust"]
     throttle = input_params["throttle"]
     timeout = input_params["timeout"]
     vfid = input_params["vfid"]
@@ -169,7 +161,6 @@ def main():
         fos_user_name,
         fos_password,
         https,
-        ssh_hostkeymust,
         throttle,
         vfid,
         "brocade_chassis",

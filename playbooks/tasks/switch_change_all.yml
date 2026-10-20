@@ -50,7 +50,6 @@
         port_configuration:
           dynamic_portname_format: "T.A.R"
           portname_mode: "off"
-          # credit_recovery_mode: "off"
     - name: Enable switch
       brocade_fibrechannel_switch:
         credential: "{{ credential }}"

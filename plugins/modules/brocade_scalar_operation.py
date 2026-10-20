@@ -265,7 +265,6 @@ def main():
                 fos_user_name=dict(required=True, type="str"),
                 fos_password=dict(required=True, type="str", no_log=True),
                 https=dict(required=True, type="str"),
-                ssh_hostkeymust=dict(required=False, type="bool"),
             ),
         ),
         vfid=dict(required=False, type="int"),
@@ -311,9 +310,6 @@ def main():
     fos_user_name = input_params["credential"]["fos_user_name"]
     fos_password = input_params["credential"]["fos_password"]
     https = input_params["credential"]["https"]
-    ssh_hostkeymust = True
-    if "ssh_hostkeymust" in input_params["credential"]:
-        ssh_hostkeymust = input_params["credential"]["ssh_hostkeymust"]
     throttle = input_params["throttle"]
     timeout = input_params["timeout"]
     vfid = input_params["vfid"]
@@ -331,7 +327,6 @@ def main():
         fos_user_name,
         fos_password,
         https,
-        ssh_hostkeymust,
         throttle,
         vfid,
         module_name,

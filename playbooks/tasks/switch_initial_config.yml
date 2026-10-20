@@ -72,7 +72,6 @@
         port_configuration:
           dynamic_portname_format: "I.T.A.R"
           portname_mode: "dynamic"
-           # credit_recovery_mode: "onLrOnly"
     - name: Enable switch after settings some attributes that require switch disable
       brocade_fibrechannel_switch:
         credential: "{{ credential }}"

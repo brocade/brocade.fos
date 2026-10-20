@@ -192,7 +192,6 @@ def singleton_get(
     auth,
     vfid,
     result,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -212,19 +211,13 @@ def singleton_get(
         :rtype: dict
     """
     if module_name == "brocade_chassis" and obj_name == "chassis":
-        return chassis_get(
-            login, password, fos_ip_addr, fos_version, is_https, auth, vfid, result, ssh_hostkeymust, timeout
-        )
+        return chassis_get(fos_ip_addr, is_https, auth, vfid, result, timeout)
 
     if module_name == "brocade_fibrechannel_configuration" and obj_name == "fabric":
-        return fabric_get(
-            login, password, fos_ip_addr, fos_version, is_https, auth, vfid, result, ssh_hostkeymust, timeout
-        )
+        return fabric_get(fos_ip_addr, is_https, auth, vfid, result, timeout)
 
     if module_name == "brocade_fibrechannel_configuration" and obj_name == "port_configuration":
-        return port_configuration_get(
-            login, password, fos_ip_addr, fos_version, is_https, auth, vfid, result, ssh_hostkeymust, timeout
-        )
+        return port_configuration_get(fos_ip_addr, is_https, auth, vfid, result, timeout)
 
     # get is not support for these modules. Just return empty
     if module_name == "brocade_security" and obj_name == "security_certificate_action":
@@ -551,7 +544,6 @@ def list_get(
     auth,
     vfid,
     result,
-    ssh_hostkeymust,
     timeout,
 ):
     if (module_name == "brocade_fibrechannel_switch" or module_name == "switch") and list_name == "fibrechannel_switch":
@@ -570,7 +562,6 @@ def list_get(
         auth,
         vfid,
         result,
-        ssh_hostkeymust,
         timeout,
     )
 
@@ -595,7 +586,6 @@ def singleton_patch(
     vfid,
     result,
     new_attributes,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -618,46 +608,34 @@ def singleton_patch(
     """
     if module_name == "brocade_chassis" and obj_name == "chassis":
         return chassis_patch(
-            login,
-            password,
             fos_ip_addr,
-            fos_version,
             is_https,
             auth,
             vfid,
             result,
             new_attributes,
-            ssh_hostkeymust,
             timeout,
         )
 
     if module_name == "brocade_fibrechannel_configuration" and obj_name == "fabric":
         return fabric_patch(
-            login,
-            password,
             fos_ip_addr,
-            fos_version,
             is_https,
             auth,
             vfid,
             result,
             new_attributes,
-            ssh_hostkeymust,
             timeout,
         )
 
     if module_name == "brocade_fibrechannel_configuration" and obj_name == "port_configuration":
         return port_configuration_patch(
-            login,
-            password,
             fos_ip_addr,
-            fos_version,
             is_https,
             auth,
             vfid,
             result,
             new_attributes,
-            ssh_hostkeymust,
             timeout,
         )
 
@@ -699,7 +677,6 @@ def list_patch(
     vfid,
     result,
     entries,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -809,7 +786,6 @@ def list_post(
     vfid,
     result,
     entries,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -851,7 +827,6 @@ def list_delete(
     vfid,
     result,
     entries,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -887,7 +862,6 @@ def singleton_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -909,7 +883,6 @@ def singleton_helper(
 
     try:
         module_name = get_module_name(module_name)
-        result["ssh_hostkeymust"] = ssh_hostkeymust
 
         ret_code, response = singleton_get(
             fos_user_name,
@@ -922,7 +895,6 @@ def singleton_helper(
             auth,
             vfid,
             result,
-            ssh_hostkeymust,
             timeout,
         )
         if ret_code != 0:
@@ -979,7 +951,6 @@ def singleton_helper(
                             auth,
                             vfid,
                             result,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1011,7 +982,6 @@ def singleton_helper(
                                 vfid,
                                 result,
                                 policy,
-                                ssh_hostkeymust,
                                 timeout,
                             )
                             if ret_code != 0:
@@ -1033,7 +1003,6 @@ def singleton_helper(
                             vfid,
                             result,
                             policy,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1054,7 +1023,6 @@ def singleton_helper(
                             vfid,
                             result,
                             policy,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1078,7 +1046,6 @@ def singleton_helper(
                                 vfid,
                                 result,
                                 policy,
-                                ssh_hostkeymust,
                                 timeout,
                             )
                             if ret_code != 0:
@@ -1101,7 +1068,6 @@ def singleton_helper(
                             auth,
                             vfid,
                             result,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1133,7 +1099,6 @@ def singleton_helper(
                                 vfid,
                                 result,
                                 policy,
-                                ssh_hostkeymust,
                                 timeout,
                             )
                             if ret_code != 0:
@@ -1155,7 +1120,6 @@ def singleton_helper(
                             vfid,
                             result,
                             policy,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1179,7 +1143,6 @@ def singleton_helper(
                                 vfid,
                                 result,
                                 policy,
-                                ssh_hostkeymust,
                                 timeout,
                             )
                             if ret_code != 0:
@@ -1199,7 +1162,6 @@ def singleton_helper(
                         vfid,
                         result,
                         diff_attributes,
-                        ssh_hostkeymust,
                         timeout,
                     )
                     if ret_code != 0:
@@ -1232,7 +1194,6 @@ def list_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -1272,7 +1233,6 @@ def list_helper(
             auth,
             vfid,
             result,
-            ssh_hostkeymust,
             timeout,
         )
         if ret_code != 0:
@@ -1487,7 +1447,6 @@ def list_helper(
                     vfid,
                     result,
                     diff_entries,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1509,7 +1468,6 @@ def list_helper(
                     vfid,
                     result,
                     delete_entries,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1531,7 +1489,6 @@ def list_helper(
                     vfid,
                     result,
                     add_entries,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1553,7 +1510,6 @@ def list_delete_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -1589,7 +1545,6 @@ def list_delete_helper(
             auth,
             vfid,
             result,
-            ssh_hostkeymust,
             timeout,
         )
         if ret_code != 0:
@@ -1640,7 +1595,6 @@ def list_delete_helper(
                     vfid,
                     result,
                     delete_entries,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1860,7 +1814,6 @@ def list_operation(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -1915,7 +1868,6 @@ def list_operation(
                 vfid,
                 result,
                 op_entries,
-                ssh_hostkeymust,
                 timeout,
             )
             if ret_code != 0:
@@ -1946,7 +1898,6 @@ def list_operation(
                     vfid,
                     result,
                     attributes,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1966,7 +1917,6 @@ def list_operation_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -2005,7 +1955,6 @@ def list_operation_helper(
         auth,
         vfid,
         result,
-        ssh_hostkeymust,
         timeout,
     )
     if ret_code != 0:
@@ -2055,7 +2004,6 @@ def list_operation_helper(
                 fos_user_name,
                 fos_password,
                 https,
-                ssh_hostkeymust,
                 throttle,
                 vfid,
                 module_name,
@@ -2224,7 +2172,6 @@ def list_operation_helper(
             fos_user_name,
             fos_password,
             https,
-            ssh_hostkeymust,
             throttle,
             vfid,
             module_name,
@@ -2244,7 +2191,6 @@ def list_operation_helper(
             fos_user_name,
             fos_password,
             https,
-            ssh_hostkeymust,
             throttle,
             vfid,
             module_name,
@@ -2264,7 +2210,6 @@ def list_operation_helper(
             fos_user_name,
             fos_password,
             https,
-            ssh_hostkeymust,
             throttle,
             vfid,
             module_name,
@@ -2287,7 +2232,6 @@ def operation_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     op_name,
@@ -2331,7 +2275,6 @@ def operation_helper(
                 vfid,
                 result,
                 attributes_for_api,
-                ssh_hostkeymust,
                 timeout,
             )
             if ret_code != 0:
@@ -2383,7 +2326,6 @@ def operation_post(
     vfid,
     result,
     attributes,
-    ssh_hostkeymust,
     timeout,
 ):
     """

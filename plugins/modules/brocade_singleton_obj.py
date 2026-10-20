@@ -266,12 +266,6 @@ options:
                   chassis object.
                 required: false
                 type: str
-            telnet_timeout:
-                description:
-                - Telnet/Bash session timeout in minutes. 0 disables timeout.
-                  Used with brocade_chassis chassis object.
-                required: false
-                type: int
             insistent_domain_id_enabled:
                 description:
                 - Enable insistent domain ID feature. Used with
@@ -460,7 +454,6 @@ def main():
                 fos_user_name=dict(required=True, type="str"),
                 fos_password=dict(required=True, type="str", no_log=True),
                 https=dict(required=True, type="str"),
-                ssh_hostkeymust=dict(required=False, type="bool"),
             ),
         ),
         vfid=dict(required=False, type="int"),
@@ -508,7 +501,6 @@ def main():
                 actions=dict(required=False, type="dict"),
                 # brocade_chassis / chassis
                 chassis_user_friendly_name=dict(required=False, type="str"),
-                telnet_timeout=dict(required=False, type="int"),
                 # brocade_fibrechannel_configuration / fabric
                 insistent_domain_id_enabled=dict(required=False, type="bool"),
                 preserved_domain_id_mode_enabled=dict(required=False, type="bool"),
@@ -547,9 +539,6 @@ def main():
     fos_user_name = input_params["credential"]["fos_user_name"]
     fos_password = input_params["credential"]["fos_password"]
     https = input_params["credential"]["https"]
-    ssh_hostkeymust = True
-    if "ssh_hostkeymust" in input_params["credential"]:
-        ssh_hostkeymust = input_params["credential"]["ssh_hostkeymust"]
     throttle = input_params["throttle"]
     timeout = input_params["timeout"]
     vfid = input_params["vfid"]
@@ -564,7 +553,6 @@ def main():
         fos_user_name,
         fos_password,
         https,
-        ssh_hostkeymust,
         throttle,
         vfid,
         module_name,

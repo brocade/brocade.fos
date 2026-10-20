@@ -63,6 +63,9 @@ _LOG_DATEFMT = "%Y%m%d-%H%M%S"
 # Timeout in seconds for each linter (ansible-lint in collection repos can be slow)
 LINTER_TIMEOUT = 300
 
+# Log files in this directory (code_sanity_*.log) older than this many days are deleted on each run
+LOG_RETENTION_DAYS = 7
+
 
 class ColoredFormatter(logging.Formatter):
     """Format log messages with level-based colors for console."""
@@ -86,6 +89,20 @@ class ColoredFormatter(logging.Formatter):
         return msg
 
 
+def cleanup_old_logs(log_dir: Path, retention_days: int = LOG_RETENTION_DAYS) -> list[Path]:
+    """Delete code_sanity_*.log files in log_dir last modified more than retention_days ago. Returns deleted paths."""
+    cutoff = time.time() - retention_days * 24 * 60 * 60
+    deleted: list[Path] = []
+    for log_file in log_dir.glob("code_sanity_*.log"):
+        try:
+            if log_file.is_file() and log_file.stat().st_mtime < cutoff:
+                log_file.unlink()
+                deleted.append(log_file)
+        except OSError:
+            continue
+    return deleted
+
+
 def setup_logging(verbose: bool = False) -> logging.Logger:
     """Configure colored console logging and a timestamped log file. Returns the module logger."""
     log = logging.getLogger(__name__)
@@ -95,6 +112,7 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
 
     # Log file in same directory as script: tests/sanity/code_sanity_<timestamp>.log
     script_dir = Path(__file__).resolve().parent
+    deleted_logs = cleanup_old_logs(script_dir)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_path = script_dir / f"code_sanity_{timestamp}.log"
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
@@ -116,6 +134,8 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
     log.addHandler(stderr_handler)
 
     log.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if deleted_logs:
+        log.debug(f"Deleted {len(deleted_logs)} log file(s) older than {LOG_RETENTION_DAYS} days")
     return log
 
 
