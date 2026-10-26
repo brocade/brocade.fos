@@ -6,7 +6,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-
 __metaclass__ = type
 
 
@@ -135,7 +134,6 @@ msg:
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_objects import operation_helper
-
 
 """
 Brocade Fibre Channel supportsave initiate

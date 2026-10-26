@@ -7,7 +7,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-
 __metaclass__ = type
 
 
@@ -118,7 +117,6 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_connection import exit_after_login, login, logout
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_objects import list_get, to_human_list
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_yang import str_to_human, str_to_yang
-
 
 """
 Brocade IP Storage gather facts
