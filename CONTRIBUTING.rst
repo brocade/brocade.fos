@@ -38,6 +38,29 @@ The activation command above is for Bash. Use the equivalent activation command
 for your shell. Reactivate this environment in each new terminal before running
 the development tools. ``.venv/`` is ignored by Git.
 
+Building a Local Collection
+===========================
+
+With the development environment activated, build the collection from the
+repository root:
+
+.. code-block:: bash
+
+   ansible-galaxy collection build --output-path ./build --force
+
+The artifact is written to ``build/brocade-fos-<version>.tar.gz``, where
+``<version>`` is the value in ``galaxy.yml``. Replace that placeholder when
+installing the artifact:
+
+.. code-block:: bash
+
+   ansible-galaxy collection install "./build/brocade-fos-<version>.tar.gz" --force
+
+Rebuild and reinstall after changing source files to update the installed
+collection. The ``--force`` options replace an existing build artifact and
+installed collection with the same version. ``build/`` is ignored by Git.
+Follow ``PUBLISHING.md`` for release artifact validation and publication.
+
 Making Changes
 ==============
 

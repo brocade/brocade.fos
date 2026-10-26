@@ -1,98 +1,106 @@
-# Introduction
+# Brocade FOS collection
 
-This repository provides reference example Modules & Playbooks for
-Ansible to manage Fibre Channel switches running different FOS versions.
-Please refer CHANGELOG.rst for release specific details.
+The `brocade.fos` collection provides Ansible modules and example playbooks
+for storage administrators to manage Brocade Fibre Channel switches through
+the Fabric OS (FOS) REST API. It supports gathering facts and managing FOS
+switches.
+
+## Requirements
+
+- See the [compatibility matrix](https://github.com/brocade/brocade.fos/blob/main/versioning.rst)
+  for tested Python, ansible-core, and FOS versions.
+- The minimum Ansible version is declared in
+  [meta/runtime.yml](https://github.com/brocade/brocade.fos/blob/main/meta/runtime.yml).
+- Network access from the controller to the switch REST API, REST enabled on
+  the switch, and credentials with permission to perform the requested operation.
 
 ## Installation
 
-Step1: clone the repository
+Install the collection on the controller or in the execution environment
+where your playbooks run. The `ansible-galaxy` command is supplied by
+`ansible-core`.
 
-```
-HTTPS example:
+The collection requirements for the example playbooks are listed in
+[collections/requirements.yml](https://github.com/brocade/brocade.fos/blob/main/collections/requirements.yml).
 
-    git clone https://github.com/brocade/ansible
-```
+Use fully qualified names such as `brocade.fos.brocade_facts` in playbooks.
+A collection installation does not require `ANSIBLE_LIBRARY` or a custom
+`module_utils` path.
 
-Step2: Add library path ANSIBLE_LIBRARY variable
+### Automation Hub
 
-```
-BASH example:
+To install a certified release from Red Hat Ansible Automation Hub, use an
+account with an active subscription and obtain an API token from the Hub.
+Add the following server configuration to `ansible.cfg`:
 
-    if the repository is cloned under /home/myaccount/ansible,
+```ini
+[galaxy]
+server_list = rh_hosted_ah
 
-    export ANSIBLE_LIBRARY="/home/myaccount/ansible/library"
-```
-
-Step3: update ansible.cfg to point to utils directory for module_utils
-
-```
-Example available under ansible.cfg
-```
-
-## Tower/AWX
-
-Step 1: create a project within AWX and choose
-
-```
-SCN TYPE to Git
-SCM URL to https://github.com/brocade/ansible.git
+[galaxy_server.rh_hosted_ah]
+url = https://console.redhat.com/api/automation-hub/content/published/
+auth_url = https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
 ```
 
-Step 2: create an inventory.
+Set your token in the environment and install the collection:
 
-Step 3: add a host to the inventory, placed in the `fos_switches` group.
-Playbooks in this collection target `hosts: fos_switches`; use `--limit
-<host name>` to run against one specific switch.
-
-Step 4: add the following to the variables for the host.
-
-```
-ansible_connection: local
-credential:
-  fos_ip_addr: <IP address of FOS switch>
-  fos_user_name: user_name
-  fos_password: <FOS password for admin>
-  https: "<false/true/self>"
+```bash
+export ANSIBLE_GALAXY_SERVER_RH_HOSTED_AH_TOKEN='<automation-hub-api-token>'
+ansible-galaxy collection install brocade.fos --server rh_hosted_ah
 ```
 
-The `credential` variable is used by playbooks available when choosing the
-project created above to connect to FOS switch. See
-[playbooks/tasks/inventory](playbooks/tasks/inventory) for a runnable
-example (including the `zoning_migrate` group used by
-`zoning_migrate.yml`, which needs a `f_credential`/`t_credential` pair
-instead of a single `credential`).
+### Ansible Galaxy
+
+To install a release published on Ansible Galaxy:
+
+```bash
+ansible-galaxy collection install brocade.fos --server https://galaxy.ansible.com/
+```
+
+### Git
+
+Install Git, then install the collection directly from the repository:
+
+```bash
+ansible-galaxy collection install git+https://github.com/brocade/brocade.fos.git,main
+```
+
+Replace `main` with a tag or commit to select a specific source revision.
+
+### Development dependencies
+
+For development dependencies, testing, and documentation tools, follow the
+[Development Setup guide](https://github.com/brocade/brocade.fos/blob/main/CONTRIBUTING.rst#development-setup).
 
 ## Connection to FOS
 
-Primary connection to FOS for playbooks is FOS REST connection.
+Playbooks connect to FOS through its REST API.
 
 ## How to create playbooks
 
-When creating Zoning playbooks, Zoning specific modules are used. This
-is to hide some of the Zoning specific operational complexities that
-would otherwise be exposed if using generic templates. However, most
-other REST FOS objects can be addressed by common template modules:
-brocade_single_obj and brocade_list_obj.
+Use the dedicated zoning modules when creating zoning playbooks. These
+modules handle operational details that would otherwise require explicit
+configuration with generic templates. Most other FOS REST objects can be
+managed using the generic modules brocade_singleton_obj and brocade_list_obj.
 
 ### Zoning
 
-Using brocade_zoning_alias, brocade_zoning_zone, and brocade_zoning_cfg
-modules, playbooks can be created to update Alias, Zone, or CFG in FOS
-Zoning database respectively.
+Use the brocade_zoning_alias, brocade_zoning_zone, and brocade_zoning_cfg
+modules to update aliases, zones, and CFGs, respectively, in the FOS
+zoning database.
 
 When adding Alias, Zone or CFG, each module takes a list of entries.
 Each entry contains a name and a list of members. brocade_zoning_zone
 module can take principal_members in addition to members if you are
 interested in creating peer zones. During addition, entries are
-considered additive to the existing FOS Zoning database. In other word,
+considered additive to the existing FOS Zoning database. In other words,
 if a playbook contains Aliases AAA and BBB and FOS Zoning database
 contained BBB and CCC before the execution of the playbook, the result
 of the playbook will contain Aliases AAA, BBB, and CCC. CCC is not
 removed even though it is not mentioned in the playbook.
 
-Here is an example of a simple playbook of Alias to create alias_host_1 Alias
-with two members and alias_target_1 Alias with one member.
+The following example creates the alias alias_host_1 with two members
+and the alias alias_target_1 with one member.
 
 ```yaml
 - name: Create aliases
@@ -101,7 +109,7 @@ with two members and alias_target_1 Alias with one member.
       fos_ip_addr: 198.51.100.1
       fos_user_name: user_name
       fos_password: user_password
-      https: False
+      https: "false"
     vfid: -1
     aliases:
       - name: alias_host_1
@@ -117,8 +125,7 @@ Alias, Zone, or CFG entry is deleted only if aliases_to_delete,
 zones_to_delete or cfgs_to_delete variable is provided with a list of
 Aliases, Zones or CFGs to delete.
 
-Here is an example of a simple playbook of Alias to delete alias_host_1 and
-alias_target_1.
+The following example deletes the aliases alias_host_1 and alias_target_1.
 
 ```yaml
 - name: Delete aliases
@@ -127,7 +134,7 @@ alias_target_1.
       fos_ip_addr: 198.51.100.1
       fos_user_name: user_name
       fos_password: user_password
-      https: False
+      https: "false"
     vfid: -1
     aliases_to_delete:
       - name: alias_host_1
@@ -138,11 +145,11 @@ Please refer to playbooks/tasks/zoning_zone_delete.yml for additional reference.
 
 Alias, Zone, or CFG entry addition and deletion are mutually exclusive.
 
-Members to existing Alias, Zone or CFG entries are updated during a play
-if difference exists between a playbook and the existing FOS Zoning
-database. By default, members or principal_members are thought to be a
-full list and NOT additive. Thus resulting play of FOS Zoning database
-will contain the members defined in the playbook only. For example, if a
+Members of existing alias, zone, or CFG entries are updated during a play
+if a difference exists between a playbook and the existing FOS Zoning
+database. By default, the members and principal_members parameters each specify the
+complete desired list rather than an additive list. The resulting FOS zoning database
+will therefore contain only the members defined in the playbook. For example, if a
 playbook defines an Alias with members AAA and BBB and the Alias in FOS
 Zoning database contained BBB and CCC before the execution of the
 playbook, the result of the playbook will be an Alias with AAA and BBB.
@@ -152,39 +159,37 @@ However, if optional members_add_only variable is set to True for the
 task, the result of the previous playbook will be AAA, BBB, and CCC,
 where AAA is added and CCC remains.
 
-Inversely, optional members_remove_only variable is set to True to
-specify removal of specific Alias, Zone, or CFG members.
+Conversely, set the optional members_remove_only variable to True to
+remove specific alias, zone, or CFG members.
 
 Please refer to playbooks/tasks/zoning_zone_add.yml for default behavior
 reference, playbooks/tasks/zoning_zone_members_add_only.yml for members_add_only
 reference and playbooks/tasks/zoning_zone_members_remove_only.yml for
 members_remove_only reference.
 
-If interested in copying an existing Alias, Zone, or CFG to a new
-object, brocade_zoning_copy module is used. If any changes are detected
+To copy an existing alias, zone, or CFG to a new
+object, use the brocade_zoning_copy module. If any changes are detected
 in the Zoning object - for example, new member is added to a Zone -
 being copied from, the difference is newly applied to the destination
 object - i.e. the added member is added to the destination Zone if
 already created.
 
-During execution, each module will update the define configuration and
-either save or enable CFG depending on if a CFG is already active on
+During execution, each module will update the defined configuration and
+either save or enable CFG depending on whether a CFG is already active on
 FOS. If any error is encountered, the changes are aborted and the FOS
 Zoning database will revert back to pre-task state.
 
 An optional active_cfg variable is only applicable to brocade_zoning_cfg
 module. The variable is used to specify a CFG to be enabled.
 
-### Yang module/object specific Ansible modules
+### YANG module/object specific Ansible modules
 
-Here are the list of additional Ansible modules beyond Zoning. These
-modules typically take a dictionary or a list of dictionary. The
-dictionary contains attributes matching Yang REST leaf definitions.
-However, Ansible variables require underscore while hyphen is used in
-Yang REST leaf definitions. So, the attributes within the dictionary
-should match Yang REST leaf definition while replacing hyphen with
-underscore. i.e. my-leaf-name in Yang REST is converted to my_leaf_name
-within Ansible playbook.
+The following is a list of additional Ansible modules beyond zoning. These
+modules typically take a dictionary or a list of dictionaries. The
+dictionary contains attributes matching YANG REST leaf definitions.
+Use underscores in dictionary attribute names in place of the hyphens
+used in YANG REST leaf names. For example, my-leaf-name in a YANG model
+becomes my_leaf_name in an Ansible playbook.
 
 | Ansible module name | Description |
 |---|---|
@@ -213,13 +218,13 @@ within Ansible playbook.
 
 ### How to add attribute input to modules
 
-As documented above, attributes passed to modules mirror Yang REST
-attribute name, except replacing "-" with "_" to aid Ansible convention.
-Most values assigned to these attributes also mirror Yang REST
-definition and details can be found in <https://github.com/brocade/yang>.
+As documented above, attribute names passed to modules match YANG REST
+attribute names, with hyphens replaced by underscores to follow Ansible conventions.
+Most attribute values also match their YANG REST definitions. Details
+can be found in [Brocade YANG models](https://github.com/brocade/yang).
 
-However, in some instances, attribute values are modified for both to
-maintain consistencies and to help with readability of playbooks.
+However, in some instances, attribute values are modified to
+maintain consistency and improve playbook readability.
 
 | Ansible module name | Attribute name | Value description |
 |---|---|---|
@@ -266,17 +271,17 @@ maintain consistencies and to help with readability of playbooks.
 
 ### Template based Ansible modules
 
-Dedicated Ansible modules are used to handle REST Yang objects that need specific
+Dedicated Ansible modules are used to handle REST YANG objects that need specific
 handling; else template based Ansible modules are used.
 
 #### Singleton object
 
-A singleton object refers to a FOS REST object that is only one of the
-kind on FOS switch. Yang definition of container is used to define this
-type of object. Using the Yang definition and brocade_singleton_obj
-module, playbooks can be created to update the object.
+A singleton object is a FOS REST object with only one instance on a
+FOS switch. These objects are defined as YANG containers. Use the
+brocade_singleton_obj module and the YANG definition to create
+playbooks that update them.
 
-All the Yang REST FOS models are published in github.com/brocade/yang.
+All FOS REST YANG models are published at github.com/brocade/yang.
 
 For example, brocade-chassis module contains an object named chassis.
 And chassis object contains a string type leaf named
@@ -293,14 +298,13 @@ module brocade-chassis {
 }
 ```
 
-To create a playbook to set chassis-user-friendly-name to XYZ is created
-by:
+To create a playbook that sets chassis-user-friendly-name to XYZ:
 
 1. use brocade_singleton_obj module
-2. provide the module_name to match the Yang REST FOS module name -
+2. provide the module_name to match the YANG REST FOS module name -
    brocade-chassis or brocade_chassis. "-" and "_" are interchangeable as
    module_name.
-3. provide the obj_name to match the Yang REST FOS object name -
+3. provide the obj_name to match the YANG REST FOS object name -
    chassis. As with module_name, "-" and "_" are interchangeable as
    obj_name.
 4. provide leaf entry within attributes. Only one -
@@ -314,7 +318,7 @@ by:
       fos_ip_addr: 198.51.100.1
       fos_user_name: user_name
       fos_password: user_password
-      https: False
+      https: "false"
     vfid: -1
     module_name: "brocade_chassis"
     obj_name: "chassis"
@@ -322,12 +326,12 @@ by:
       chassis_user_friendly_name: XYZ
 ```
 
-Playing the above playbook to set the chassis-user-friendly-name to XYZ
-if different or return no change if already set to XYZ.
+Running this playbook sets chassis-user-friendly-name to XYZ if its value
+differs, or reports no change if it is already set to XYZ.
 
 Although the module should apply to all objects in general, the
-following are the list of modules and objects that have been verified
-based on the playbooks under tasks directory
+following table lists the modules and objects that have been verified
+using the playbooks in the tasks directory.
 
 | module name | object name |
 |---|---|
@@ -344,11 +348,11 @@ based on the playbooks under tasks directory
 #### List object
 
 A list object refers to a FOS REST object that can contain multiple
-entries on FOS switch. Yang definition of list is used to define this
-type of object. Using the Yang definition and brocade_list_obj module,
-playbooks can be created to create, update, or delete the object.
+entries on a FOS switch. These objects are defined as YANG lists. Use
+the brocade_list_obj module and the YANG definition to create playbooks
+that create, update, or delete entries.
 
-All the Yang REST FOS models are published in github.com/brocade/yang.
+All FOS REST YANG models are published at github.com/brocade/yang.
 
 For example, brocade-snmp module contains an object named v3-account.
 And v3-account object contains a key named index and a string type leaf
@@ -372,10 +376,10 @@ To create a playbook to set community-name to XYZ for an entry with
 index of 1, and ZYX for index of 2:
 
 1. use brocade_list_obj module
-2. provide the module_name to match the Yang REST FOS module name -
+2. provide the module_name to match the YANG REST FOS module name -
    brocade-snmp or brocade_snmp. "-" and "_" are interchangeable as
    module_name.
-3. provide the list_name to match the Yang REST FOS object name -
+3. provide the list_name to match the YANG REST FOS object name -
    v3-account or v3_account. As with module_name, "-" and "_" are
    interchangeable as list_name.
 4. provide an array within entries. Only key and community_string are
@@ -385,7 +389,7 @@ index of 1, and ZYX for index of 2:
    left out or set to True. If so, entries in playbook but not in FOS
    are added, entries in both playbook and FOS are updated if different,
    and entries not in playbook but in FOS are deleted. If the array
-   contains only subset of all entries, only addition and update are
+   contains only a subset of the entries, only additions and updates are
    performed.
 
 ```yaml
@@ -395,7 +399,7 @@ index of 1, and ZYX for index of 2:
       fos_ip_addr: 198.51.100.1
       fos_user_name: user_name
       fos_password: user_password
-      https: False
+      https: "false"
     vfid: -1
     module_name: "brocade_snmp"
     obj_name: "v3_account"
@@ -407,12 +411,12 @@ index of 1, and ZYX for index of 2:
         community_name: ZYX
 ```
 
-Playing the above playbook to set the community name for two entries.
-Rest of the entries already exist on FOS are untouched.
+Running this playbook sets the community name for two entries.
+Other entries already present on the switch remain unchanged.
 
 Although the module should apply to all objects in general, the
-following are the list of modules and objects that have been verified
-based on the playbooks under tasks directory
+following table lists the modules and objects that have been verified
+using the playbooks in the tasks directory.
 
 | module name | list name |
 |---|---|
@@ -468,7 +472,7 @@ Step 3: Save and exit. The file is now encrypted with your vault password.
 #### Integrating with the inventory file
 
 Instead of storing credentials directly on a host in
-[playbooks/tasks/inventory](playbooks/tasks/inventory), omit the
+[playbooks/tasks/inventory](https://github.com/brocade/brocade.fos/blob/main/playbooks/tasks/inventory), omit the
 `credential` key for that host there and supply it at runtime 
 via `-e @secrets.yml` instead. 
 
@@ -504,8 +508,41 @@ ansible-playbook <your_playbook>.yml -e @secrets.yml --ask-vault-pass
 ## Documentation
 
 Documentation can be generated by following the instructions in
-[docs/documentation.rst](docs/documentation.rst).
+[docs/documentation.rst](https://github.com/brocade/brocade.fos/blob/main/docs/documentation.rst).
 
-## Contact
+## Testing and compatibility
 
-Automation.BSN@broadcom.com
+Certification CI runs collection build/import checks, production lint, and
+full sanity tests through Red Hat's Partner Certification Checker. These
+checks do not exercise a live switch. The 3.0.0 lab qualification matrix covers
+FOS 10.0.1 and 9.2.2d; live validation results are recorded separately. See the
+[ordered validation checklist](https://github.com/brocade/brocade.fos/blob/main/PUBLISHING.md#certification-validation-checklist).
+
+Example playbooks cover zoning, fact gathering, and configuration operations.
+Select and review examples for your switch, permissions, and FOS version.
+
+## Support
+
+This collection is maintained by the Brocade Automation Team at Broadcom.
+For certified releases obtained through Automation Hub, Red Hat customers
+can open an Ansible Automation Platform support case using the **Create issue**
+link on Automation Hub.
+
+For source and community issues, use the
+[GitHub issue tracker](https://github.com/brocade/brocade.fos/issues).
+The maintainer contact is [Automation.BSN@broadcom.com](mailto:Automation.BSN@broadcom.com).
+
+## Release notes
+
+See the [changelog](https://github.com/brocade/brocade.fos/blob/main/CHANGELOG.rst)
+and [version history](https://github.com/brocade/brocade.fos/blob/main/versioning.rst).
+
+## License
+
+The collection metadata declares `GPL-3.0-or-later` and `BSD-2-Clause`.
+The license texts and existing file-specific notices are retained in this release.
+Certification CI uses Red Hat's permitted missing-GPL-header exception; this does
+not change the declared licenses or assign new file-specific licenses:
+
+- [GNU GPL version 3](https://github.com/brocade/brocade.fos/blob/main/LICENSE)
+- [BSD 2-Clause](https://github.com/brocade/brocade.fos/blob/main/LICENSES/BSD-2-Clause.txt)
