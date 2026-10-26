@@ -1,5 +1,7 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
@@ -1708,19 +1710,19 @@ def _fos_module_defined(content, result):
     is_lib_defined = bool()
     filename = "versioning.rst"
 
-    for _ in content:
-        if not is_mod_utils_defined and re.search(r"module_utils", _):
-            directory = _.split()[-1].strip().strip('"')
+    for line in content:
+        if not is_mod_utils_defined and re.search(r"module_utils", line):
+            directory = line.split()[-1].strip().strip('"')
             if (Path(directory).parent / filename).exists():
                 is_mod_utils_defined = True
 
-        if not is_lib_defined and re.search(r"library", _):
-            directory = _.split()[-1].strip().strip('"')
+        if not is_lib_defined and re.search(r"library", line):
+            directory = line.split()[-1].strip().strip('"')
             if (Path(directory).parent / filename).exists():
                 is_lib_defined = True
 
         if is_mod_utils_defined and is_lib_defined:
-            directory = _.split()[-1].strip().strip('"')
+            directory = line.split()[-1].strip().strip('"')
             if (Path(directory).parent / filename).exists():
                 result["versionFilePath"] = str(Path(directory).parent / filename)
             break

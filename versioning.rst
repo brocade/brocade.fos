@@ -10,13 +10,13 @@ Release Criteria
          | | ||___ Support for a new FOS version is added to brocade.fos
          | | |____ Bug fix is released for brocade.fos
          | |______ When new features are added to brocade.fos
-         |________ Changes when a release is backward in-compatiable with the previous version
+         |________ Changes when a release is backward-incompatible with the previous version
 
 Release History
 ***************
 
-The following are the tested ansible releases against the FOS versions. The
-notes section provide the details on the exceptions and release notes.
+The following table lists the Ansible releases tested against each FOS version.
+The notes section provides details about exceptions and release notes.
 
 +---------------+-----------------------------+----------------+-----------------------------+--------------------------------------+
 |  brocade.fos  |   GA Date                   |     FOS        |  Tested with                |              Notes                   |

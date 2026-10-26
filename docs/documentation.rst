@@ -2,7 +2,7 @@
 Documentation
 *************
 
-To build documentation
+To build the documentation:
 
 #. Install dependencies:
 

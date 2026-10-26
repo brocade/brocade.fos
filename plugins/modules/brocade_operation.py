@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
@@ -8,134 +10,108 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 
 module: brocade_operation
 short_description: Brocade IPS operations
-version_added: '2.7'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
+version_added: "2.0.0"
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
-- Perform IPS operations for list of objects based on module name and list name provided
+-   Perform IPS operations for list of objects based on module name and list name provided.
 
 options:
     credential:
         description:
-        - Login information
+        -   Login information.
         suboptions:
             fos_ip_addr:
                 description:
-                - IP address of the FOS switch
+                -   IP address of the FOS switch.
                 required: true
                 type: str
             fos_user_name:
                 description:
-                - Login name of FOS switch
+                -   Login name for the FOS switch.
                 required: true
                 type: str
             fos_password:
                 description:
-                - Password of FOS switch
+                -   Password for the FOS switch.
                 required: true
                 type: str
             https:
                 description:
-                - Encryption to use. True for HTTPS, self for self-signed HTTPS,
-                  or False for HTTP
-                choices:
-                    - True
-                    - False
-                    - self
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
                 required: true
                 type: str
-
         type: dict
         required: true
     vfid:
         description:
-        - VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
         type: int
-        required: false
     throttle:
         description:
-        - Throttling delay in seconds. Enables second retry on first
-          failure.
+        -   Delay in seconds before retrying once when the switch is busy.
         type: int
     timeout:
         description:
-        - REST timeout in seconds for operations that take longer than FOS
-          default value.
+        -   REST timeout in seconds for operations that take longer than the FOS default timeout.
         type: int
     module_name:
         description:
-        - Yang module name. Hyphen or underscore are used interchangebly.
-          If the Yang module name is xy-z, either xy-z or xy_z are acceptable.
+        -   YANG module name. Hyphens and underscores can be used interchangeably. If the YANG module
+            name is xy-z, either xy-z or xy_z is acceptable.
         required: true
         type: str
-    list_name:
-        description:
-        - Yang name for the list object. Hyphen or underscore are used
-          interchangebly. If the Yang list name is xy-z, either
-          xy-z or xy_z are acceptable.
-        required: true
-        type: str
-    all_entries:
-        description:
-        - Boolean to indicate if the entries specified are full
-          list of objects or not. By default, all_entries are
-          thought to be true if not specified. If all_entries
-          is set to true, the entries is used to calculate the change
-          of existing entryies, addition, and deletion. If
-          all_entries is set to false, the entries is used to
-          calculate the change of existing entries and addition
-          of entries only. i.e.  the module will not attempt to
-          delete objects that do not show up in the entries.
-        required: false
-        type: bool
     entries:
         description:
-        - List of objects. Name of each attributes within
-          each entries should match the Yang name except hyphen
-          is replaced with underscore. Using hyphen in the name
-          may result in errenously behavior based on Ansible
-          parsing.
+        -   List of objects. The name of each attribute within each entry should match the YANG name
+            except that hyphens are replaced with underscores. Using hyphens in the name may result in
+            erroneous behavior based on Ansible parsing.
         required: true
         type: list
-
+        elements: raw
+    all_entries:
+        description:
+        -   Whether entries specifies the complete desired list of objects. When true, the module adds,
+            updates, and deletes objects to match entries. When false, the module adds or updates the
+            specified objects and preserves objects omitted from entries.
+        type: bool
 """
 
 
-EXAMPLES = """
-
-  gather_facts: False
-
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
   vars:
     credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
+      fos_ip_addr: '{{ fos_ip_addr }}'
       fos_user_name: user_name
       fos_password: user_password
-      https: False
-
+      https: "false"
   tasks:
-
-  - name: list object example
-    brocade_list_obj:
-      credential: "{{credential}}"
-      vfid: -1
-      module_name: "brocade-snmp"
-      list_name: "v3-account"
-      all_entries: False
-      entries:
-        - index: 1
-          community_name: "new name"
-
-
+    - name: List object example
+      brocade.fos.brocade_list_obj:
+        credential: '{{ credential }}'
+        vfid: -1
+        module_name: brocade-snmp
+        list_name: v3-account
+        all_entries: false
+        entries:
+          - index: 1
+            community_name: new name
 """
 
 
-RETURN = """
+RETURN = r"""
 
 msg:
-    description: Success message
+    description: Success message.
     returned: success
     type: str
 
@@ -171,7 +147,7 @@ def main():
         throttle=dict(required=False, type="int"),
         timeout=dict(required=False, type="int"),
         module_name=dict(required=True, type="str"),
-        entries=dict(required=True, type="list"),
+        entries=dict(required=True, type="list", elements="raw"),
         all_entries=dict(required=False, type="bool"),
     )
 

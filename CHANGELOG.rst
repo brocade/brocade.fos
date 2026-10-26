@@ -4,6 +4,32 @@ Brocade.Fos Release Notes
 
 .. contents:: Topics
 
+v3.0.0
+======
+
+Release Summary
+---------------
+
+Major release that removes the SSH transport and Paramiko dependency in favor of the FOS REST API, updates module argument documentation and examples, and adds certification and regression-test workflows. See Major Changes for incompatible changes.
+
+Major Changes
+-------------
+
+- Removed the SSH transport and ``paramiko`` dependency; all modules now use the FOS REST API only. Remove ``ssh_hostkeymust``, ``telnet_timeout``, and ``credit_recovery_mode`` from existing playbooks.
+- Switch FOS REST requests and responses from XML to JSON, removing the ``xmltodict`` dependency.
+- Replace hyphens with underscores in nested firmwaredownload, supportsave, and scalar-operation parameter names (for example, ``user-name`` becomes ``user_name``).
+
+Minor Changes
+-------------
+
+- Add the Red Hat Partner Certification Checker v6.0.0 workflow for pull requests and main-branch pushes, with a required-check aggregation job.
+- Update Automation Hub installation, support, release, and ordered manual-validation instructions.
+
+Bugfixes
+--------
+
+- brocade_operation_show_status, brocade_operation_firmwaredownload and other modules - preserve native JSON types from FOS REST responses instead of stringifying them, fixing numeric/boolean payload round-trips (for example show-status message-id polling failing with "unknown-attribute").
+
 v2.2.0
 ======
 
@@ -25,15 +51,15 @@ Minor Changes
 Removed Features (previously deprecated)
 ----------------------------------------
 
-- Remove references to SNMP v1 in the documentation and playbooks since they are obsoleted from FOS 10.x.
+- Remove references to SNMP v1 in the documentation and playbooks because they are obsolete in FOS 10.x.
 
 Bugfixes
 --------
 
-- Fix majority of lint violations reported by ansible-lint for playbooks and ruff for python files.
+- Fix the majority of lint violations reported by ansible-lint for playbooks and Ruff for Python files.
 - Fix typo in brocade_ssh.py module - https://github.com/brocade/ansible/pull/188.
 - Meaningless "No start of json char found" error message when SAN switch cannot be connected to - https://github.com/brocade/ansible/issues/204.
-- Replaced protocol with protocol_v2 under suppportsave playbook.
+- Replaced protocol with protocol_v2 in the supportsave playbook.
 - vfid with no defined-configuration causes brocade_facts.py to crash - https://github.com/brocade/ansible/issues/203.
 
 Known Issues
@@ -81,4 +107,4 @@ Bugfixes
 --------
 
 - Corrected typo in logical switch playbook by removing syslog.
-- Issue related to errors sometimes being ignored is fixed by throwing proper error to upper layers.
+- Fix errors that were sometimes ignored by propagating them to higher layers.

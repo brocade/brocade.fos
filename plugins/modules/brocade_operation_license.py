@@ -1,274 +1,231 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.brocade.fos.plugins.module_utils.brocade_objects import operation_helper
 
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 
 module: brocade_operation_license
 short_description: Brocade Fibre Channel license operation
-version_added: '2.7'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
+version_added: "2.1.0"
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
-- Perform license install, remove, or export operations on a Brocade switch.
+-   Perform license install, remove, or export operations on a Brocade switch.
 
 options:
     credential:
         description:
-        - Login information
+        -   Login information.
         suboptions:
             fos_ip_addr:
                 description:
-                - IP address of the FOS switch
+                -   IP address of the FOS switch.
                 required: true
                 type: str
             fos_user_name:
                 description:
-                - Login name of FOS switch
+                -   Login name for the FOS switch.
                 required: true
                 type: str
             fos_password:
                 description:
-                - Password of FOS switch
+                -   Password for the FOS switch.
                 required: true
                 type: str
             https:
                 description:
-                - Encryption to use. True for HTTPS, self for self-signed HTTPS,
-                  or False for HTTP
-                choices:
-                    - True
-                    - False
-                    - self
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
                 required: true
                 type: str
-
         type: dict
         required: true
     vfid:
         description:
-        - VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
         type: int
-        required: false
     throttle:
         description:
-        - Throttling delay in seconds. Enables second retry on first
-          failure.
+        -   Delay in seconds before retrying once when the switch is busy.
         type: int
     timeout:
         description:
-        - REST timeout in seconds for operations that take longer than FOS
-          default value.
+        -   REST timeout in seconds for operations that take longer than the FOS default timeout.
         type: int
     license:
         description:
-        - License operation input parameters. All attributes correspond to the
-          license-parameters container in the brocade-operation-license YANG
-          model (revision 2024-10-03). Hyphens in YANG leaf names are replaced
-          by underscores.
-        - The required sub-parameters depend on the action and transfer method.
-          license_payload is valid only for action install when name and host
-          are not specified.
-          usb_file_path is valid for action install when name, host, and
-          license_payload are not specified, or for action export when host
-          and license_payload are not specified.
-          usb_directory_path is valid only for action export when host and
-          license_payload are not specified.
-          The remote server parameters host, user_name, password,
-          remote_directory, protocol, port, and remote_file are valid for
-          action install or export when license_payload and usb_file_path
-          are not specified.
+        -   License operation input parameters. All attributes correspond to the license-parameters container
+            in the brocade-operation-license YANG model (revision 2024-10-03). Hyphens in YANG leaf names are
+            replaced by underscores.
+        -   The required sub-parameters depend on the action and transfer method. license_payload is valid
+            only for action install when name and host are not specified. usb_file_path is valid for action
+            install when name, host, and license_payload are not specified, or for action export when host and
+            license_payload are not specified. usb_directory_path is valid only for action export when host
+            and license_payload are not specified. The remote server parameters host, user_name, password,
+            remote_directory, protocol, port, and remote_file are valid for action install or export when
+            license_payload and usb_file_path are not specified.
         required: true
         type: dict
         suboptions:
-            action:
-                description:
-                - Action to perform on the license. One of install, remove,
-                  or export.
-                choices: [install, remove, export]
-                required: true
-                type: str
             name:
                 description:
-                - License key (e.g. 'license')
-                  or serial number (e.g. 'FOS-00-0-02-11201234'). Required for
-                  install by key, remove, and targeted export. Not needed when
-                  installing from a file, payload, or remote server.
-                required: false
+                -   License key (e.g. 'license') or serial number (e.g. 'FOS-00-0-02-11201234'). Required for
+                    install by key, remove, and targeted export. Not needed when installing from a file,
+                    payload, or remote server.
+                type: str
+            action:
+                description:
+                -   Action to perform on the license. One of install, remove, or export.
+                required: true
                 type: str
             license_payload:
                 description:
-                - Base64-encoded license certificate content (RFC 3414).
-                  Use only when action is install and name and host are not
-                  specified.
-                required: false
+                -   Base64-encoded license certificate content (RFC 3414). Use only when action is install and
+                    name and host are not specified.
                 type: str
             usb_file_path:
                 description:
-                - Relative path of the license certificate on a USB device.
-                  Use for action install when name, host, and license_payload
-                  are not specified, or for action export when host and
-                  license_payload are not specified.
-                required: false
+                -   Relative path of the license certificate on a USB device. Use for action install when
+                    name, host, and license_payload are not specified, or for action export when host and
+                    license_payload are not specified.
                 type: str
             usb_directory_path:
                 description:
-                - USB directory path for exporting license certificates.
-                  Use only when action is export and host and license_payload
-                  are not specified.
-                required: false
+                -   USB directory path for exporting license certificates. Use only when action is export and
+                    host and license_payload are not specified.
                 type: str
             host:
                 description:
-                - IP address or host name of the remote server. Use when
-                  action is install or export and license_payload and
-                  usb_file_path are not specified.
-                required: false
+                -   IP address or host name of the remote server. Use when action is install or export and
+                    license_payload and usb_file_path are not specified.
                 type: str
             user_name:
                 description:
-                - User name for the remote server. Required when host is
-                  specified.
-                required: false
+                -   User name for the remote server. Required when host is specified.
                 type: str
             password:
                 description:
-                - Password for the remote server. Required when host is
-                  specified. The module encodes this value automatically
-                  before sending to FOS. This value is not logged.
-                required: false
+                -   Password for the remote server. Required when host is specified. The module encodes this
+                    value automatically before sending to FOS. This value is not logged.
                 type: str
-                no_log: true
             remote_directory:
                 description:
-                - Directory path on the remote server for license transfer.
-                  Required when host is specified.
-                required: false
+                -   Directory path on the remote server for license transfer. Required when host is specified.
                 type: str
             protocol:
                 description:
-                - Transport protocol for remote server transfer. Required when
-                  host is specified.
-                choices: [scp, sftp]
-                required: false
+                -   Transport protocol for remote server transfer. Required when host is specified.
                 type: str
             port:
                 description:
-                - Port number for scp or sftp (1..65535). Optional when host
-                  is specified.
-                required: false
+                -   Port number for scp or sftp (1..65535). Optional when host is specified.
                 type: int
             remote_file:
                 description:
-                - Remote file name for exporting a license certificate to a
-                  specific file. Optional when host is specified.
-                required: false
+                -   Remote file name for exporting a license certificate to a specific file. Optional when
+                    host is specified.
                 type: str
-
 """
 
 
-EXAMPLES = """
-
-  gather_facts: False
-
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
   vars:
     credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
+      fos_ip_addr: '{{ fos_ip_addr }}'
       fos_user_name: admin
       fos_password: xxxx
-      https: False
-
+      https: "false"
   tasks:
-
-  - name: install license using license key
-    brocade_operation_license:
-      credential: "{{credential}}"
-      vfid: -1
-      license:
-        name: "xxx-xx-xx-xx-xxxxxxx"
-        action: "install"
-
-  - name: install license from remote server
-    brocade_operation_license:
-      credential: "{{credential}}"
-      vfid: -1
-      license:
-        action: "install"
-        host: "192.168.1.100"
-        user_name: "user_name"
-        password: "user_password"
-        remote_directory: "/remote_license_directory"
-        protocol: "scp"
-
-  - name: install license from USB
-    brocade_operation_license:
-      credential: "{{credential}}"
-      vfid: -1
-      license:
-        action: "install"
-        usb_file_path: "remote_license_directory/my_license.xml"
-
-  - name: remove license
-    brocade_operation_license:
-      credential: "{{credential}}"
-      vfid: -1
-      license:
-        name: "xxx-xx-xx-xx-xxxxxxx"
-        action: "remove"
-
-  - name: export all license certificates to remote server
-    brocade_operation_license:
-      credential: "{{credential}}"
-      vfid: -1
-      license:
-        action: "export"
-        host: "192.168.1.100"
-        user_name: "user_name"
-        password: "user_password"
-        remote_directory: "/remote_license_directory"
-        protocol: "scp"
-
-  - name: export specific license certificate to remote file
-    brocade_operation_license:
-      credential: "{{credential}}"
-      vfid: -1
-      license:
-        name: "xxx-xx-xx-xx-xxxxxxx"
-        action: "export"
-        host: "192.168.1.100"
-        user_name: "user_name"
-        password: "user_password"
-        remote_directory: "/remote_license_directory"
-        remote_file: "my_license.xml"
-        protocol: "scp"
-
-  - name: export all license certificates to USB
-    brocade_operation_license:
-      credential: "{{credential}}"
-      vfid: -1
-      license:
-        action: "export"
-        usb_directory_path: "/usb_license_directory"
-
+    - name: Install license using license key
+      brocade.fos.brocade_operation_license:
+        credential: '{{ credential }}'
+        vfid: -1
+        license:
+          name: Xxx-xx-xx-xx-xxxxxxx
+          action: install
+    - name: Install license from remote server
+      brocade.fos.brocade_operation_license:
+        credential: '{{ credential }}'
+        vfid: -1
+        license:
+          action: install
+          host: 192.168.1.100
+          user_name: user_name
+          password: user_password
+          remote_directory: /remote_license_directory
+          protocol: scp
+    - name: Install license from USB
+      brocade.fos.brocade_operation_license:
+        credential: '{{ credential }}'
+        vfid: -1
+        license:
+          action: install
+          usb_file_path: remote_license_directory/my_license.xml
+    - name: Remove license
+      brocade.fos.brocade_operation_license:
+        credential: '{{ credential }}'
+        vfid: -1
+        license:
+          name: Xxx-xx-xx-xx-xxxxxxx
+          action: remove
+    - name: Export all license certificates to remote server
+      brocade.fos.brocade_operation_license:
+        credential: '{{ credential }}'
+        vfid: -1
+        license:
+          action: export
+          host: 192.168.1.100
+          user_name: user_name
+          password: user_password
+          remote_directory: /remote_license_directory
+          protocol: scp
+    - name: Export specific license certificate to remote file
+      brocade.fos.brocade_operation_license:
+        credential: '{{ credential }}'
+        vfid: -1
+        license:
+          name: Xxx-xx-xx-xx-xxxxxxx
+          action: export
+          host: 192.168.1.100
+          user_name: user_name
+          password: user_password
+          remote_directory: /remote_license_directory
+          remote_file: my_license.xml
+          protocol: scp
+    - name: Export all license certificates to USB
+      brocade.fos.brocade_operation_license:
+        credential: '{{ credential }}'
+        vfid: -1
+        license:
+          action: export
+          usb_directory_path: /usb_license_directory
 """
 
 
-RETURN = """
+RETURN = r"""
 
 msg:
-    description: Success message
+    description: Success message.
     returned: success
     type: str
 
 """
+
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.brocade.fos.plugins.module_utils.brocade_objects import operation_helper
 
 
 """

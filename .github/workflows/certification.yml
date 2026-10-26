@@ -1,0 +1,91 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
+name: Collection certification
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: certification-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-version:
+    name: Read Python version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      minor: ${{ steps.read.outputs.minor }}
+    steps:
+      - name: Check out Python version file
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          sparse-checkout: .python-version
+          sparse-checkout-cone-mode: false
+
+      - name: Read Python version
+        id: read
+        shell: python
+        run: |
+          import os
+          import re
+          from pathlib import Path
+
+          version = Path(".python-version").read_text().strip()
+          if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+              raise SystemExit(".python-version must contain one MAJOR.MINOR.PATCH version")
+          minor = version.rsplit(".", 1)[0]
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+              output.write(f"version={version}\nminor={minor}\n")
+
+  certification:
+    needs: python-version
+    # Immutable release: update deliberately when Red Hat releases new checks.
+    uses: ansible-collections/partner-certification-checker/.github/workflows/certification-reusable.yml@v6.0.0 # zizmor: ignore[unpinned-uses]
+    with:
+      origin-python-version: ${{ needs.python-version.outputs.version }}
+
+  units:
+    name: Unit tests (core ${{ matrix.core }})
+    needs: python-version
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        core: [stable-2.16, stable-2.18, stable-2.20]
+    steps:
+      - name: Run module regression tests
+        # Same pinned test action used by certification checker v6.0.0.
+        uses: ansible-community/ansible-test-gh-action@9cdbd323f59530c0f43669f1168c8ef4a8c06d41
+        with:
+          ansible-core-version: ${{ matrix.core }}
+          origin-python-version: ${{ needs.python-version.outputs.version }}
+          # ansible-test selects container interpreters by major/minor.
+          target-python-version: ${{ needs.python-version.outputs.minor }}
+          testing-type: units
+          pull-request-change-detection: false
+
+  required:
+    name: Certification required
+    needs: [python-version, certification, units]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all certification jobs to succeed
+        env:
+          PYTHON_RESULT: ${{ needs.python-version.result }}
+          CERTIFICATION_RESULT: ${{ needs.certification.result }}
+          UNIT_RESULT: ${{ needs.units.result }}
+        run: |
+          test "$PYTHON_RESULT" = success
+          test "$CERTIFICATION_RESULT" = success
+          test "$UNIT_RESULT" = success

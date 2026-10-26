@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
@@ -8,112 +10,96 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 
 module: brocade_zoning_zone
 short_description: Brocade Fibre Channel zone configuration
 version_added: '2.7'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
-- Create, detroy, or update zones. The whole of zones and
-  zones_to_delete are applied to FOS within a single login session
-  to termininate after the completion. If no active cfg is found,
-  cfgsave is executed before the completion of the session. If an
-  active cfg is found, cfgenable of the existing cfg is executed
-  to apply any potential changes before the completion of the session.
+-   Create, delete, or update zones. Changes are applied to FOS within a single login session that ends
+    when the operation completes. If no configuration is active, cfgsave is executed before the session
+    ends. If a configuration is active, cfgenable is executed for that configuration to apply any changes
+    before the session ends.
 
 options:
     credential:
         description:
-        - Login information
+        -   Login information.
         suboptions:
             fos_ip_addr:
                 description:
-                - IP address of the FOS switch
+                -   IP address of the FOS switch.
                 required: true
                 type: str
             fos_user_name:
                 description:
-                - Login name of FOS switch
+                -   Login name for the FOS switch.
                 required: true
                 type: str
             fos_password:
                 description:
-                - Password of FOS switch
+                -   Password for the FOS switch.
                 required: true
                 type: str
             https:
                 description:
-                - Encryption to use. True for HTTPS, self for self-signed HTTPS,
-                  or False for HTTP
-                choices:
-                    - True
-                    - False
-                    - self
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
                 required: true
                 type: str
-
         type: dict
         required: true
     vfid:
         description:
-        - VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
         type: int
-        required: false
     throttle:
         description:
-        - Throttling delay in seconds. Enables second retry on first
-          failure.
+        -   Delay in seconds before retrying once when the switch is busy.
         type: int
     timeout:
         description:
-        - REST timeout in seconds for operations that take longer than FOS
-          default value.
+        -   REST timeout in seconds for operations that take longer than the FOS default timeout.
         type: int
     zones:
         description:
-        - List of zones to be created or modified. If a zone does
-          not exist in the current Zone Database, the zone will be
-          created with the members specified. If a zone already
-          exist in the current Zone Database, the zone is updated to
-          reflect to members specificed. In other word, new members
-          will be added and removed members will be removed.
-          Peerzones are automatically created only if optional principal
-          members are specified. zones are zones_to_delete are mutually
-          exclusive.
-        required: true
+        -   List of zones to be created or modified. If a zone does not exist in the current Zone
+            Database, the zone will be created with the members specified. If a zone already exists in
+            the current Zone Database, the zone is updated to reflect the members specified. In other
+            words, new members will be added and removed members will be removed. Peer zones are
+            automatically created only if optional principal members are specified. zones and
+            zones_to_delete are mutually exclusive.
         type: list
+        elements: raw
     members_add_only:
         description:
-        - If set to True, new members will be added and old members
-          not specified also remain
-        required: false
+        -   If true, add new members and preserve existing members omitted from the list.
         type: bool
     members_remove_only:
         description:
-        - If set to True, members specified are removed
-        required: false
+        -   If true, remove the specified members.
         type: bool
     zones_to_delete:
         description:
-        - List of zones to be deleted. zones and zones_to_delete are mutually
-          exclusive.
-        required: true
+        -   List of zones to be deleted. zones and zones_to_delete are mutually exclusive.
         type: list
-
+        elements: raw
 """
 
 
-EXAMPLES = """
-
-  gather_facts: False
-
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
   vars:
     credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
+      fos_ip_addr: '{{ fos_ip_addr }}'
       fos_user_name: user_name
       fos_password: user_password
-      https: False
+      https: "false"
     zones:
       - name: zone_new_1
         members:
@@ -132,23 +118,19 @@ EXAMPLES = """
     zones_to_delete:
       - name: zone_new_p
       - name: zone_new_2
-
   tasks:
-
-  - name: Create zones
-    brocade_zoning_zone:
-      credential: "{{credential}}"
-      vfid: -1
-      zones: "{{zones}}"
-#      zones_to_delete: "{{zones_to_delete}}"
-
+    - name: Create zones
+      brocade.fos.brocade_zoning_zone:
+        credential: '{{ credential }}'
+        vfid: -1
+        zones: '{{ zones }}'
 """
 
 
-RETURN = """
+RETURN = r"""
 
 msg:
-    description: Success message
+    description: Success message.
     returned: success
     type: str
 
@@ -191,10 +173,10 @@ def main():
         vfid=dict(required=False, type="int"),
         throttle=dict(required=False, type="int"),
         timeout=dict(required=False, type="int"),
-        zones=dict(required=False, type="list"),
+        zones=dict(required=False, type="list", elements="raw"),
         members_add_only=dict(required=False, type="bool"),
         members_remove_only=dict(required=False, type="bool"),
-        zones_to_delete=dict(required=False, type="list"),
+        zones_to_delete=dict(required=False, type="list", elements="raw"),
     )
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)

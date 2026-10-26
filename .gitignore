@@ -70,3 +70,11 @@ docs/rst/
 ### Dev tools ###
 .venv/
 tests/sanity/code_sanity_*.log
+
+# Local certification and Ansible test output
+tests/output/
+.ansible/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+importer_result.json

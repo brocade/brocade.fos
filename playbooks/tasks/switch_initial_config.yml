@@ -1,5 +1,7 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 - name: Apply initial switch configuration
   hosts: fos_switches
@@ -7,14 +9,14 @@
 
   tasks:
     - name: Disable switch before settings some attributes that require switch disable
-      brocade_fibrechannel_switch:
+      brocade.fos.brocade_fibrechannel_switch:
         credential: "{{ credential }}"
         vfid: -1
         switch:
           enabled_state: false
 
-    - name: Switch configuration
-      brocade_fibrechannel_switch:
+    - name: Switch and fabric name configuration
+      brocade.fos.brocade_fibrechannel_switch:
         credential: "{{ credential }}"
         vfid: -1
         switch:
@@ -27,31 +29,17 @@
             dns_server:
               - "8.8.8.8"
               - "8.8.4.4"
-
-    - name: Switch configuration
-      brocade_fibrechannel_switch:
-        credential: "{{ credential }}"
-        vfid: -1
-        switch:
-          user_friendly_name: "switch_name"
-          fabric_user_friendly_name: "fabric_name"
-          domain_id: 1
-          banner: "AUTHORIZED USERS ONLY"
-          dynamic_load_sharing: "lossless-dls"
-          dns_servers:
-            dns_server:
-              - "203.0.113.30"
-              - "203.0.113.31"
+  
 
     - name: Switch domain name configuration
-      brocade_fibrechannel_switch:
+      brocade.fos.brocade_fibrechannel_switch:
         credential: "{{ credential }}"
         vfid: -1
         switch:
           domain_name: "example.com"
 
     - name: Fabric configuration
-      brocade_fibrechannel_configuration_fabric:
+      brocade.fos.brocade_fibrechannel_configuration_fabric:
         credential: "{{ credential }}"
         vfid: -1
         fabric:
@@ -66,28 +54,28 @@
     - name: >
         Port configuration. if running on a platform where credit recovery is
         supported, the line can be uncommented to update the mode.
-      brocade_fibrechannel_configuration_port_configuration:
+      brocade.fos.brocade_fibrechannel_configuration_port_configuration:
         credential: "{{ credential }}"
         vfid: -1
         port_configuration:
           dynamic_portname_format: "I.T.A.R"
           portname_mode: "dynamic"
     - name: Enable switch after settings some attributes that require switch disable
-      brocade_fibrechannel_switch:
+      brocade.fos.brocade_fibrechannel_switch:
         credential: "{{ credential }}"
         vfid: -1
         switch:
           enabled_state: true
 
     - name: Chassis configuration
-      brocade_chassis:
+      brocade.fos.brocade_chassis:
         credential: "{{ credential }}"
         vfid: -1
         chassis:
           chassis_user_friendly_name: "chassis_name"
 
     - name: FC ports configuration
-      brocade_interface_fibrechannel:
+      brocade.fos.brocade_interface_fibrechannel:
         credential: "{{ credential }}"
         vfid: -1
         ports:
@@ -102,7 +90,7 @@
         seconds: 15
 
     - name: Zoning configuration
-      brocade_zoning_default_zone:
+      brocade.fos.brocade_zoning_default_zone:
         credential: "{{ credential }}"
         vfid: -1
         default_zone_access: noaccess
@@ -110,7 +98,7 @@
     # if using IP addresses that are not available as clock servers
     # the module may timeout returning failure
     - name: Clock server configuration
-      brocade_time_clock_server:
+      brocade.fos.brocade_time_clock_server:
         credential: "{{ credential }}"
         vfid: -1
         clock_server:
@@ -119,14 +107,14 @@
               - "203.0.113.20"
 
     - name: Time zone configuration
-      brocade_time_time_zone:
+      brocade.fos.brocade_time_time_zone:
         credential: "{{ credential }}"
         vfid: -1
         time_zone:
           name: "Etc/UTC"
 
     - name: Audit configuration
-      brocade_logging_audit:
+      brocade.fos.brocade_logging_audit:
         credential: "{{ credential }}"
         vfid: -1
         audit:
@@ -144,7 +132,7 @@
           severity_level: "info"
 
     - name: Syslog configuration
-      brocade_logging_syslog_server:
+      brocade.fos.brocade_logging_syslog_server:
         credential: "{{ credential }}"
         vfid: -1
         syslog_servers:
@@ -153,7 +141,7 @@
             server: "203.0.113.10"
 
     - name: SNMP system configuration
-      brocade_snmp_system:
+      brocade.fos.brocade_snmp_system:
         credential: "{{ credential }}"
         vfid: -1
         snmp_system:
@@ -167,7 +155,7 @@
           security_set_level_string: "authentication-and-privacy"
 
     - name: SNMP v3 accounts - setup non-password attributes
-      brocade_snmp_v3_account:
+      brocade.fos.brocade_snmp_v3_account:
         credential: "{{ credential }}"
         vfid: -1
         v3_accounts:
@@ -183,7 +171,7 @@
             user_name: "snmp_admin_password"
 
     - name: SNMP v3 traps
-      brocade_snmp_v3_trap:
+      brocade.fos.brocade_snmp_v3_trap:
         credential: "{{ credential }}"
         vfid: -1
         v3_traps:
@@ -225,7 +213,7 @@
             usm_index: 6
 
     - name: Ipfilter policy is created or present
-      brocade_security_ipfilter_policy:
+      brocade.fos.brocade_security_ipfilter_policy:
         credential: "{{ credential }}"
         vfid: -1
         ipfilter_policies:
@@ -233,7 +221,7 @@
             ip_version: "IPv4"
 
     - name: Ipfilter rules are created or present
-      brocade_security_ipfilter_rule:
+      brocade.fos.brocade_security_ipfilter_rule:
         credential: "{{ credential }}"
         vfid: -1
         ipfilter_rules:
@@ -319,13 +307,13 @@
             source_ip: "any"
 
     - name: Ipfilter policy is activated or active already
-      brocade_security_ipfilter_policy:
+      brocade.fos.brocade_security_ipfilter_policy:
         credential: "{{ credential }}"
         vfid: -1
         active_policy: "ipv4_telnet_http"
 
     - name: Disable root & user
-      brocade_security_user_config:
+      brocade.fos.brocade_security_user_config:
         credential: "{{ credential }}"
         vfid: -1
         user_configs:
@@ -335,7 +323,7 @@
             account_enabled: false
 
     - name: Add new account
-      brocade_security_user_config:
+      brocade.fos.brocade_security_user_config:
         credential: "{{ credential }}"
         vfid: -1
         user_configs:
@@ -353,7 +341,7 @@
             chassis_access_role: "admin"
 
     - name: Configure relay server
-      brocade_maps_maps_config:
+      brocade.fos.brocade_maps_maps_config:
         credential: "{{ credential }}"
         vfid: -1
         maps_config:

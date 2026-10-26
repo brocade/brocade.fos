@@ -1,6 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 """
 Executes checks on the codebase to ensure it meets the standards.
@@ -33,8 +35,8 @@ COPYRIGHT_EXCLUDES = [
 RUFF_WARNING_RULES = {
     "S",  # flake8-bandit (security checks)
     "SIM",  # flake8-simplify (style suggestions)
-    "F841",  # unused variable
-    "B007",  # unused loop variable
+    "F841",  # _unused variable
+    "B007",  # _unused loop variable
     "B905",  # zip without strict
     "N",  # pep8-naming (legacy camelCase in Brocade API utils)
     "PTH",  # flake8-use-pathlib (modernization, not a bug)
@@ -135,7 +137,7 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
 
     log.setLevel(logging.DEBUG if verbose else logging.INFO)
     if deleted_logs:
-        log.debug(f"Deleted {len(deleted_logs)} log file(s) older than {LOG_RETENTION_DAYS} days")
+        log.debug("Deleted %s log file(s) older than %s days", len(deleted_logs), LOG_RETENTION_DAYS)
     return log
 
 
@@ -147,11 +149,11 @@ def check_dependencies(log: logging.Logger) -> None:
     if not which("ansible-lint"):
         missing.append("ansible-lint")
     if missing:
-        log.error(f"Required tools not found. Install missing packages with:\n  pip install {' '.join(missing)}")
+        log.error("Required tools not found. Install missing packages with:\n  pip install %s", " ".join(missing))
         sys.exit(2)
 
     if sys.prefix != sys.base_prefix:
-        log.debug(f"Python virtual env in being used: {sys.prefix}")
+        log.debug("Python virtual env in being used: %s", sys.prefix)
         python_path = sys.prefix
     else:
         python_path = sys.base_prefix
@@ -162,7 +164,7 @@ def check_dependencies(log: logging.Logger) -> None:
 def find_repo_root(start: Path) -> Path:
     """Find repository root (directory containing .git or .ansible-lint or galaxy.yml)."""
     current = start.resolve()
-    for _ in range(20):
+    for _unused in range(20):
         if (current / ".git").exists():
             return current
         if (current / ".ansible-lint").exists():
@@ -235,7 +237,7 @@ def run_ruff(**kwargs) -> tuple[list[dict], int]:
     if fix:
         fmt_cmd = ["ruff", "format"] + full_paths
         if verbose:
-            log.info(f"Running: {' '.join(fmt_cmd)}")
+            log.info("Running: %s", " ".join(fmt_cmd))
         try:
             subprocess.run(
                 fmt_cmd,
@@ -243,6 +245,7 @@ def run_ruff(**kwargs) -> tuple[list[dict], int]:
                 capture_output=True,
                 text=True,
                 timeout=LINTER_TIMEOUT,
+                check=False,
             )
         except FileNotFoundError:
             log.error("Ruff not found. Install it with: pip install ruff")
@@ -263,7 +266,7 @@ def run_ruff(**kwargs) -> tuple[list[dict], int]:
     cmd.extend(full_paths)
 
     if verbose:
-        log.info(f"Running: {' '.join(cmd)}")
+        log.info("Running: %s", " ".join(cmd))
     try:
         result = subprocess.run(
             cmd,
@@ -271,6 +274,7 @@ def run_ruff(**kwargs) -> tuple[list[dict], int]:
             capture_output=True,
             text=True,
             timeout=LINTER_TIMEOUT,
+            check=False,
         )
     except FileNotFoundError:
         logging.getLogger(__name__).error("Ruff not found. Install it with: pip install ruff")
@@ -342,9 +346,9 @@ def run_ruff(**kwargs) -> tuple[list[dict], int]:
         logging.getLogger(__name__).error("Ruff violations seen")
     elif result.returncode != 0:
         rc_code = result.returncode
-        logging.getLogger(__name__).error(f"Ruff exited with code {rc_code}")
+        logging.getLogger(__name__).error("Ruff exited with code %s", rc_code)
         if result.stderr:
-            logging.getLogger(__name__).error(f"Ruff stderr: {result.stderr.strip()}")
+            logging.getLogger(__name__).error("Ruff stderr: %s", result.stderr.strip())
     else:
         rc_code = 0
     return out, rc_code
@@ -377,7 +381,7 @@ def run_ansible_lint(**kwargs) -> tuple[list[dict], int]:
     cmd.extend(full_paths)
     if verbose:
         log = logging.getLogger(__name__)
-        log.debug(f"Running: {' '.join(cmd)}")
+        log.debug("Running: %s", " ".join(cmd))
     try:
         result = subprocess.run(
             cmd,
@@ -385,12 +389,13 @@ def run_ansible_lint(**kwargs) -> tuple[list[dict], int]:
             capture_output=True,
             text=True,
             timeout=LINTER_TIMEOUT,
+            check=False,
         )
     except FileNotFoundError:
         logging.getLogger(__name__).error("Ansible-lint not found. Install it with: pip install ansible-lint")
         return [], 2
     except subprocess.TimeoutExpired:
-        logging.getLogger(__name__).error(f"Ansible-lint timed out after {LINTER_TIMEOUT}")
+        logging.getLogger(__name__).error("Ansible-lint timed out after %s", LINTER_TIMEOUT)
         return [], -1
 
     violations = []
@@ -459,9 +464,9 @@ def run_ansible_lint(**kwargs) -> tuple[list[dict], int]:
 
     if result.returncode != 0:
         rc_code = result.returncode
-        logging.getLogger(__name__).error(f"ansible-lint exited with code {rc_code}")
+        logging.getLogger(__name__).error("ansible-lint exited with code %s", rc_code)
         if result.stderr:
-            logging.getLogger(__name__).error(f"ansible-lint stderr: {result.stderr.strip()}")
+            logging.getLogger(__name__).error("ansible-lint stderr: %s", result.stderr.strip())
     elif out:
         rc_code = 1
         logging.getLogger(__name__).error("ansible-lint violations seen")
@@ -473,8 +478,8 @@ def run_ansible_lint(**kwargs) -> tuple[list[dict], int]:
 
 def run_copyright_check(repo_root: Path, files: list[Path], fix: bool = False) -> tuple[list[dict], int]:
     """
-    Check files for correct copyright statement and year.
-    If fix=True, attempts to add/update the copyright statement.
+    Check for the complete leading Broadcom copyright and license header.
+    If fix=True, repair the header while preserving preambles and third-party notices.
     Returns (list of violation dicts, exit_code).
     """
     out = []
@@ -482,14 +487,20 @@ def run_copyright_check(repo_root: Path, files: list[Path], fix: bool = False) -
     rc_code = 0
     current_year = datetime.now().year
 
-    # Pattern looks for "Copyright [optional start year-]end year Broadcom"
-    # e.g. "Copyright 2019-2026 Broadcom" or "Copyright 2026 Broadcom"
-    pattern_any = re.compile(r"Copyright\s+(?:\d{4}-)?\d{4}\s+(?:Broadcom|Brocade)", re.IGNORECASE)
-    pattern_correct = re.compile(rf"Copyright\s+(?:\d{{4}}-)?{current_year}\s+Broadcom", re.IGNORECASE)
+    pattern_copyright = re.compile(r"^[ \t]*#[ \t]*Copyright\b", re.IGNORECASE)
+    pattern_any = re.compile(r"^[ \t]*#[ \t]*Copyright\b[^\r\n]*\b(?:Broadcom|Brocade)\b", re.IGNORECASE)
+    pattern_correct = re.compile(rf"\b{current_year}\s+(?:Broadcom|Brocade)\b", re.IGNORECASE)
+    pattern_header_line = re.compile(
+        r"^[ \t]*#[ \t]*(?:The term\s+['\"]?Broadcom\b|GNU General Public License\b|SPDX-License-Identifier\b)",
+        re.IGNORECASE,
+    )
 
     copyright_text = (
         f"# Copyright 2019-{current_year} Broadcom. All rights reserved.\n"
         "# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries\n"
+        "# GNU General Public License v3.0+ "
+        "(see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause\n"
+        "# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause\n"
     )
 
     for p in files:
@@ -521,90 +532,113 @@ def run_copyright_check(repo_root: Path, files: list[Path], fix: bool = False) -
 
         full_path = repo_root / p
         try:
-            content = full_path.read_text(encoding="utf-8")
+            content = full_path.read_bytes().decode("utf-8")
         except Exception as e:
-            if not fix:
-                out.append(
-                    {
-                        "violation_type": "Error",
-                        "violation": "copyright[read_error]",
-                        "description": f"Could not read file: {e}",
-                        "file_path": filename,
-                        "line": "—",
-                        "suggested_fix": "—",
-                    }
-                )
-                rc_code = 1
+            out.append(
+                {
+                    "violation_type": "Error",
+                    "violation": "copyright[read_error]",
+                    "description": f"Could not read file: {e}",
+                    "file_path": filename,
+                    "line": "—",
+                    "suggested_fix": "—",
+                }
+            )
+            rc_code = 1
             continue
 
-        if not pattern_any.search(content):
-            if fix:
-                lines = content.splitlines(keepends=True)
-                if filename.endswith(".py"):
-                    if len(lines) > 0 and lines[0].startswith("#!"):
-                        lines.insert(1, copyright_text + "\n")
-                    else:
-                        lines.insert(0, copyright_text + "\n")
-                elif filename.endswith((".yml", ".yaml")):
-                    if len(lines) > 0 and lines[0].startswith("---"):
-                        lines.insert(1, copyright_text + "\n")
-                    else:
-                        lines.insert(0, copyright_text + "\n")
-                else:
-                    lines.insert(0, copyright_text + "\n")
-                full_path.write_text("".join(lines), encoding="utf-8")
-                fixed.append(
-                    {
-                        "violation_type": "Fixed",
-                        "violation": "copyright[missing]",
-                        "description": "Missing copyright statement",
-                        "file_path": filename,
-                        "line": "1",
-                        "suggested_fix": "Added copyright statement",
-                    }
-                )
-            else:
-                out.append(
-                    {
-                        "violation_type": "Error",
-                        "violation": "copyright[missing]",
-                        "description": "Missing copyright statement",
-                        "file_path": filename,
-                        "line": "—",
-                        "suggested_fix": f"Add: Copyright {current_year} Broadcom. All rights reserved.",
-                    }
-                )
-                rc_code = 1
-        elif not pattern_correct.search(content):
-            if fix:
-                # Replace the old copyright line with the new one
-                new_content = pattern_any.sub(f"Copyright 2019-{current_year} Broadcom", content)
-                full_path.write_text(new_content, encoding="utf-8")
-                fixed.append(
-                    {
-                        "violation_type": "Fixed",
-                        "violation": "copyright[outdated]",
-                        "description": f"Copyright year is not {current_year}",
-                        "file_path": filename,
-                        "line": "—",
-                        "suggested_fix": f"Updated year to {current_year}",
-                    }
-                )
-            else:
-                out.append(
-                    {
-                        "violation_type": "Error",
-                        "violation": "copyright[outdated]",
-                        "description": f"Copyright year is not {current_year}",
-                        "file_path": filename,
-                        "line": "—",
-                        "suggested_fix": f"Update year to {current_year}",
-                    }
-                )
-                rc_code = 1
+        lines = content.splitlines(keepends=True)
+        preamble_end = int(bool(lines and lines[0].startswith("#!")))
+        if filename.endswith(".py") and len(lines) > preamble_end:
+            if re.match(r"^[ \t\f]*#.*?coding[:=][ \t]*[-\w.]+", lines[preamble_end]):
+                preamble_end += 1
+        elif filename.endswith((".yml", ".yaml")) and lines and re.match(r"^---(?:\s|$)", lines[0]):
+            preamble_end = 1
+
+        header_lines = copyright_text.splitlines()
+        actual_header = [line.rstrip("\r\n") for line in lines[preamble_end : preamble_end + len(header_lines)]]
+        if actual_header == header_lines:
+            continue
+
+        # Only inspect leading comments; notices or header examples in the body do not count.
+        comment_end = preamble_end
+        while comment_end < len(lines) and (
+            not lines[comment_end].strip() or lines[comment_end].lstrip().startswith("#")
+        ):
+            comment_end += 1
+        leading_comments = lines[preamble_end:comment_end]
+        copyright_lines = [line for line in leading_comments if pattern_any.match(line)]
+        if not copyright_lines:
+            violation = "copyright[missing]"
+            description = "Missing Broadcom copyright/license header"
+        elif not all(pattern_correct.search(line) for line in copyright_lines):
+            violation = "copyright[outdated]"
+            description = f"Broadcom copyright year is not {current_year}; the complete header is required"
+        else:
+            violation = "copyright[incomplete]"
+            description = "Incomplete or incorrect Broadcom copyright/license header"
+
+        if not fix:
+            out.append(
+                {
+                    "violation_type": "Error",
+                    "violation": violation,
+                    "description": description,
+                    "file_path": filename,
+                    "line": str(preamble_end + 1),
+                    "suggested_fix": "Use the complete four-line Broadcom header; run --checks copyright --fix",
+                }
+            )
+            rc_code = 1
+            continue
+
+        # Replace our header fields, leaving comments under other copyright holders intact.
+        remaining = []
+        broadcom_notice = True
+        for line in leading_comments:
+            if pattern_copyright.match(line):
+                broadcom_notice = bool(pattern_any.match(line))
+            if broadcom_notice and (pattern_any.match(line) or pattern_header_line.match(line)):
+                continue
+            remaining.append(line)
+        remaining.extend(lines[comment_end:])
+
+        newline = "\r\n" if "\r\n" in content else "\n"
+        preamble = lines[:preamble_end]
+        if preamble and not preamble[-1].endswith("\n"):
+            preamble[-1] += newline
+        replacement = copyright_text.replace("\n", newline)
+        if remaining and remaining[0].strip():
+            replacement += newline
+        new_content = "".join(preamble) + replacement + "".join(remaining)
+        try:
+            full_path.write_bytes(new_content.encode("utf-8"))
+        except OSError as e:
+            out.append(
+                {
+                    "violation_type": "Error",
+                    "violation": "copyright[write_error]",
+                    "description": f"Could not write header: {e}",
+                    "file_path": filename,
+                    "line": "—",
+                    "suggested_fix": "—",
+                }
+            )
+            rc_code = 1
+            continue
+        fixed.append(
+            {
+                "violation_type": "Fixed",
+                "violation": violation,
+                "description": description,
+                "file_path": filename,
+                "line": str(preamble_end + 1),
+                "suggested_fix": "Applied the complete four-line Broadcom copyright/license header",
+            }
+        )
 
     if fix:
-        return fixed, 0
+        return fixed + out, rc_code
 
     return out, rc_code
 
@@ -677,7 +711,7 @@ def generate_fix_summary_log(
         bot = "\u2514\u2500" + "\u2500\u2534\u2500".join("\u2500" * w for w in widths) + "\u2500\u2518"
 
     log_messages.append(top)
-    log_messages.append(fmt.format(**{c: h for c, h in zip(columns, headers, strict=False)}))
+    log_messages.append(fmt.format(**dict(zip(columns, headers, strict=False))))
     log_messages.append(mid)
     for r in all_fixes:
         row_data = {c: str(r.get(c, ""))[:60] for c in columns}
@@ -761,7 +795,7 @@ def generate_summary_log(
             bot = "\u2514\u2500" + "\u2500\u2534\u2500".join("\u2500" * w for w in widths) + "\u2500\u2518"
 
             log_messages.append(top)
-            log_messages.append(fmt.format(**{c: h for c, h in zip(columns, headers, strict=False)}))
+            log_messages.append(fmt.format(**dict(zip(columns, headers, strict=False))))
             log_messages.append(mid)
             for r in display_violations:
                 row_data = {c: str(r.get(c, ""))[:60] for c in columns}
@@ -893,7 +927,7 @@ def main() -> int:
     yaml_files = []
 
     if args.path is None:
-        log.info(f"No path specified. Validating entire collection: {repo_root.resolve()}")
+        log.info("No path specified. Validating entire collection: %s", repo_root.resolve())
         py_files, yaml_files = collect_files(repo_root, repo_root)
     else:
         for path_str in args.path:
@@ -902,10 +936,10 @@ def main() -> int:
             path_arg = (Path.cwd() / path_arg).resolve() if not path_arg.is_absolute() else path_arg.resolve()
 
             if not path_arg.exists():
-                log.error(f"Path does not exist: {path_arg}")
+                log.error("Path does not exist: %s", path_arg)
                 continue
 
-            log.info(f"Validating: {path_arg}")
+            log.info("Validating: %s", path_arg)
             p_files, y_files = collect_files(path_arg, repo_root)
             py_files.extend(p_files)
             yaml_files.extend(y_files)
@@ -925,11 +959,11 @@ def main() -> int:
 
     if args.fix:
         if py_files and run_ruff_check:
-            log.info(f"Running Ruff (fix pass) on {len(py_files)} file(s)")
+            log.info("Running Ruff (fix pass) on %s file(s)", len(py_files))
             for p in py_files:
-                log.info(f"  {p}")
+                log.info("  %s", p)
             _start = time.monotonic()
-            ruff_fixes, _ = run_ruff(
+            ruff_fixes, _unused = run_ruff(
                 repo=repo_root,
                 files=py_files,
                 fix=True,
@@ -937,13 +971,13 @@ def main() -> int:
             )
             log.info("Ruff (fix pass) finished (%.1fs)", time.monotonic() - _start)
         if yaml_files and run_ansible_lint_check:
-            log.info(f"Running Ansible-lint (fix pass) on {len(yaml_files)} file(s)")
+            log.info("Running Ansible-lint (fix pass) on %s file(s)", len(yaml_files))
             files = list()
             for p in yaml_files:
                 files.append(str(p))
-            log.debug(f"Ansible-lint sanity on:\n{pformat(files, indent=4)}")
+            log.debug("Ansible-lint sanity on:\n%s", pformat(files, indent=4))
             _start = time.monotonic()
-            ansible_fixes, _ = run_ansible_lint(
+            ansible_fixes, _unused = run_ansible_lint(
                 repo=repo_root,
                 files=yaml_files,
                 fix=True,
@@ -954,17 +988,17 @@ def main() -> int:
         if run_copyright:
             all_files = py_files + yaml_files
             if all_files:
-                log.info(f"Running Copyright check (fix pass) on {len(all_files)} file(s)")
+                log.info("Running Copyright check (fix pass) on %s file(s)", len(all_files))
                 _start = time.monotonic()
-                copyright_fixes, _ = run_copyright_check(repo_root, all_files, fix=True)
+                copyright_fixes, _unused = run_copyright_check(repo_root, all_files, fix=True)
                 log.info("Copyright check (fix pass) finished (%.1fs)", time.monotonic() - _start)
 
     if py_files and run_ruff_check:
-        log.info(f"Running Ruff on {len(py_files)} file(s)")
+        log.info("Running Ruff on %s file(s)", len(py_files))
         files = list()
         for p in py_files:
             files.append(str(p))
-        log.debug(f"Ruff sanity on:\n{pformat(files, indent=4)}")
+        log.debug("Ruff sanity on:\n%s", pformat(files, indent=4))
         _start = time.monotonic()
         ruff_violations, ruff_rc = run_ruff(
             repo=repo_root, files=py_files, fix=False, verbose=args.verbose, python=dependency_paths["python"]
@@ -977,8 +1011,8 @@ def main() -> int:
         files = list()
         for p in yaml_files:
             files.append(str(p))
-        log.info(f"Running Ansible-lint on {len(yaml_files)} file(s)")
-        log.debug(f"Ansible-lint on:\n{pformat(files, indent=4)}")
+        log.info("Running Ansible-lint on %s file(s)", len(yaml_files))
+        log.debug("Ansible-lint on:\n%s", pformat(files, indent=4))
         _start = time.monotonic()
         ansible_violations, ansible_rc = run_ansible_lint(
             repo=repo_root, files=yaml_files, fix=False, verbose=args.verbose, python=dependency_paths["python"]
@@ -993,7 +1027,7 @@ def main() -> int:
     else:
         all_files = py_files + yaml_files
         if all_files:
-            log.info(f"Running Copyright check on {len(all_files)} file(s)")
+            log.info("Running Copyright check on %s file(s)", len(all_files))
             _start = time.monotonic()
             copyright_violations, copyright_rc = run_copyright_check(repo_root, all_files)
             log.info("Copyright check finished (%.1fs)", time.monotonic() - _start)
@@ -1050,7 +1084,7 @@ def main() -> int:
             mid = "\u251c\u2500" + "\u2500\u253c\u2500".join("\u2500" * w for w in widths) + "\u2500\u2524"
             bot = "\u2514\u2500" + "\u2500\u2534\u2500".join("\u2500" * w for w in widths) + "\u2500\u2518"
 
-            log_messages = [top, fmt.format(**{c: h for c, h in zip(columns, headers, strict=False)}), mid]
+            log_messages = [top, fmt.format(**dict(zip(columns, headers, strict=False))), mid]
             for r in display_violations:
                 row_data = {c: str(r.get(c, ""))[:60] for c in columns}
                 if r.get("violation_type") == "Error":

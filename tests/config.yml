@@ -1,0 +1,9 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
+# Modules execute on the Ansible controller through the FOS REST API.
+# Release qualification uses the exact version in .python-version.
+# ansible-test selects interpreters by major/minor version.
+modules:
+  python_requires: ">=3.12,<3.13"

@@ -1,5 +1,7 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 #
 # Example 1: Export a license certificate (tag: license_export)
 #
@@ -50,7 +52,7 @@
       remote_file: "license_file"
       protocol: "scp"
 
-    # Variables for exporting all license certificate to a remote directory
+    # Variables for exporting all license certificates to a remote directory
     license_export_all:
       action: "export"
       host: "198.51.100.1"
@@ -67,7 +69,7 @@
   tasks:
 
     - name: Export specific license
-      brocade_operation_license:
+      brocade.fos.brocade_operation_license:
         credential: "{{ credential }}"
         vfid: -1
         license: "{{ license_export }}"
@@ -80,7 +82,7 @@
       tags: license_export
 
     - name: Export all licenses
-      brocade_operation_license:
+      brocade.fos.brocade_operation_license:
         credential: "{{ credential }}"
         vfid: -1
         license: "{{ license_export_all }}"
@@ -93,7 +95,7 @@
       tags: license_export_all
 
     - name: Remove specified license
-      brocade_operation_license:
+      brocade.fos.brocade_operation_license:
         credential: "{{ credential }}"
         vfid: -1
         license: "{{ license_remove }}"
@@ -106,7 +108,7 @@
       tags: license_remove
 
     - name: Install specified license
-      brocade_operation_license:
+      brocade.fos.brocade_operation_license:
         credential: "{{ credential }}"
         vfid: -1
         license: "{{ license_install }}"

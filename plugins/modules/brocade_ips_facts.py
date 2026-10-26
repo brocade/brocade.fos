@@ -1,139 +1,123 @@
 #!/usr/bin/python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
+
+
+__metaclass__ = type
+
+
+DOCUMENTATION = r"""
+
+module: brocade_ips_facts
+short_description: Brocade IP storage facts gathering
+version_added: '1.0'
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
+description:
+-   Gather IPS facts.
+
+options:
+    credential:
+        description:
+        -   Login information.
+        suboptions:
+            fos_ip_addr:
+                description:
+                -   IP address of the FOS switch.
+                required: true
+                type: str
+            fos_user_name:
+                description:
+                -   Login name for the FOS switch.
+                required: true
+                type: str
+            fos_password:
+                description:
+                -   Password for the FOS switch.
+                required: true
+                type: str
+            https:
+                description:
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
+                required: true
+                type: str
+        type: dict
+        required: true
+    vfid:
+        description:
+        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        type: int
+    throttle:
+        description:
+        -   Delay in seconds before retrying once when the switch is busy.
+        type: int
+    timeout:
+        description:
+        -   REST timeout in seconds for operations that take longer than the FOS default timeout.
+        type: int
+    gather_subset:
+        description:
+        -   List of areas to be gathered. If this option is missing, all areas' facts will be gathered. Same
+            behavior applies if "all" is listed as part of gather_subset.
+        default:
+        -   all
+        type: list
+        elements: raw
+"""
+
+
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
+  vars:
+    credential:
+      fos_ip_addr: '{{ fos_ip_addr }}'
+      fos_user_name: user_name
+      fos_password: user_password
+      https: self
+  tasks:
+    - name: Gather facts
+      brocade.fos.brocade_ips_facts:
+        credential: '{{ credential }}'
+        vfid: '{{ ips_fid }}'
+        gather_subset:
+          - vrf
+          - vlan
+          - staticArp
+          - staticRoute
+          - lag
+          - configuration
+          - interface
+          - arpTable
+          - routeTable
+    - name: Print ansible_facts gathered
+      ansible.builtin.debug:
+        var: ansible_facts
+"""
+
+
+RETURN = r"""
+
+msg:
+    description: Success message.
+    returned: success
+    type: str
+
+"""
+
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_connection import exit_after_login, login, logout
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_objects import list_get, to_human_list
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_yang import str_to_human, str_to_yang
-
-__metaclass__ = type
-
-
-DOCUMENTATION = """
-
-module: brocade_ips_facts
-short_description: Brocade IP storage facts gathering
-version_added: '1.0'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
-description:
-- Gather IPS facts
-
-options:
-    credential:
-        description:
-        - Login information
-        suboptions:
-            fos_ip_addr:
-                description:
-                - IP address of the FOS switch
-                required: true
-                type: str
-            fos_user_name:
-                description:
-                - Login name of FOS switch
-                required: true
-                type: str
-            fos_password:
-                description:
-                - Password of FOS switch
-                required: true
-                type: str
-            https:
-                description:
-                - Encryption to use. True for HTTPS, self for self-signed HTTPS,
-                  or False for HTTP
-                choices:
-                    - True
-                    - False
-                    - self
-                required: true
-                type: str
-
-        type: dict
-        required: true
-    vfid:
-        description:
-        - VFID of the switch. Use -1 for FOS without VF enabled or AG.
-        type: int
-        required: false
-    throttle:
-        description:
-        - Throttling delay in seconds. Enables second retry on first
-          failure.
-        type: int
-    timeout:
-        description:
-        - REST timeout in seconds for operations that take longer than FOS
-          default value.
-        type: int
-    gather_subset:
-        description:
-        - List of areas to be gathered. If this option is missing,
-          all areas' facts will be gathered. Same behavior applies
-          if "all" is listed as part of gather_subset.
-        choices:
-            - all
-            - vrf
-            - vlan
-            - staticArp
-            - staticRoute
-            - lag
-            - configuration
-            - interface
-            - arpTable
-            - routeTable
-        required: false
-        default: all
-        type: list
-
-"""
-
-
-EXAMPLES = """
-
-  vars:
-    credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
-      fos_user_name: user_name
-      fos_password: user_password
-      https: self
-
-  tasks:
-
-  - name: gather facts
-    brocade_ips_facts:
-      credential: "{{credential}}"
-      vfid: "{{ips_fid}}"
-      gather_subset:
-        - vrf
-        - vlan
-        - staticArp
-        - staticRoute
-        - lag
-        - configuration
-        - interface
-        - arpTable
-        - routeTable
-
-  - name: print ansible_facts gathered
-    debug:
-      var: ansible_facts
-
-"""
-
-
-RETURN = """
-
-msg:
-    description: Success message
-    returned: success
-    type: str
-
-"""
 
 
 """
@@ -173,10 +157,10 @@ def main():
         vfid=dict(required=False, type="int"),
         throttle=dict(required=False, type="int"),
         timeout=dict(required=False, type="int"),
-        gather_subset=dict(required=False, type="list", default=["all"]),
+        gather_subset=dict(required=False, type="list", default=["all"], elements="raw"),
     )
 
-    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     input_params = module.params
 

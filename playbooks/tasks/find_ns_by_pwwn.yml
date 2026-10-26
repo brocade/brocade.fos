@@ -1,7 +1,9 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
-# This playbook is a reference example complete two operations
+# This playbook is a reference example that performs two operations
 #
 # 1) find a device in NS to display by matching to Port WWN (port_name)
 # 2) find a device in alias in Zoning DB to display by matching WWN
@@ -12,8 +14,8 @@
 # and another to display the data.
 #
 # If the matching Port WWN doesn't exist in the DB, the display task
-# will be "skiped". The same is true for alias display task. In other
-# word, display task will only show something if a match is found.
+# will be "skipped". The same is true for alias display task. In other
+# words, display task will only show something if a match is found.
 #
 
 - name: Find device by port WWN and show zoning
@@ -25,7 +27,7 @@
 
   tasks:
     - name: Gather device info
-      brocade_list_obj_facts:
+      brocade.fos.brocade_list_obj_facts:
         credential: "{{ credential }}"
         vfid: -1
         module_name: "brocade-name-server"
@@ -45,7 +47,7 @@
       when: ansible_facts['fibrechannel_name_server'][0]['port_name'] is defined
 
     - name: Gather device alias info
-      brocade_zoning_alias_facts_by_wwn:
+      brocade.fos.brocade_zoning_alias_facts_by_wwn:
         credential: "{{ credential }}"
         vfid: -1
         wwn: "{{ wwn_to_search }}"
@@ -56,7 +58,7 @@
       when: ansible_facts['alias'] is defined
 
     - name: Find switch with the matching domain id
-      brocade_fabric_switch_facts_by_pid:
+      brocade.fos.brocade_fabric_switch_facts_by_pid:
         credential: "{{ credential }}"
         vfid: -1
         pid: "{{ ansible_facts['fibrechannel_name_server'][0]['port_id'] }}"

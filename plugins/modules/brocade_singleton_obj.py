@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
@@ -8,422 +10,325 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 
 module: brocade_singleton_obj
 short_description: Brocade Fibre Channel generic handler for singleton object
 version_added: '2.7'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
-- Update list of attributes based on module name and object name provided
+-   Update list of attributes based on module name and object name provided.
 
 options:
     credential:
         description:
-        - Login information
+        -   Login information.
         suboptions:
             fos_ip_addr:
                 description:
-                - IP address of the FOS switch
+                -   IP address of the FOS switch.
                 required: true
                 type: str
             fos_user_name:
                 description:
-                - Login name of FOS switch
+                -   Login name for the FOS switch.
                 required: true
                 type: str
             fos_password:
                 description:
-                - Password of FOS switch
+                -   Password for the FOS switch.
                 required: true
                 type: str
             https:
                 description:
-                - Encryption to use. True for HTTPS, self for self-signed HTTPS,
-                  or False for HTTP
-                choices:
-                    - True
-                    - False
-                    - self
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
                 required: true
                 type: str
-
         type: dict
         required: true
     vfid:
         description:
-        - VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
         type: int
-        required: false
     throttle:
         description:
-        - Throttling delay in seconds. Enables second retry on first
-          failure.
+        -   Delay in seconds before retrying once when the switch is busy.
         type: int
     timeout:
         description:
-        - REST timeout in seconds for operations that take longer than FOS
-          default value.
+        -   REST timeout in seconds for operations that take longer than the FOS default timeout.
         type: int
     module_name:
         description:
-        - Yang module name. Hyphen or underscore are used interchangebly.
-          If the Yang module name is xy-z, either xy-z or xy_z are acceptable.
+        -   YANG module name. Hyphens and underscores can be used interchangeably. If the YANG module
+            name is xy-z, either xy-z or xy_z is acceptable.
         required: true
         type: str
     obj_name:
         description:
-        - Yang name for the object. Hyphen or underscore are used
-          interchangebly. If the Yang list name is xy-z, either
-          xy-z or xy_z are acceptable.
+        -   YANG name for the object. Hyphens and underscores can be used interchangeably. If the YANG
+            list name is xy-z, either xy-z or xy_z is acceptable.
         required: true
         type: str
     attributes:
         description:
-        - Attribute key-value pairs for the singleton object identified by
-          module_name and obj_name. Key names match the REST attribute names
-          with hyphens replaced by underscores. Using hyphens may cause
-          erroneous behaviour due to Ansible parsing.
-        - The specific sub-keys required depend on the obj_name value. All
-          sub-keys listed below are optional and drawn from the known singleton
-          objects in the collection. Keys not listed here may still be passed
-          for singleton objects not covered by a dedicated module.
-        - Special note for brocade_security / password - old_password and
-          new_password are supplied in plain text and are encoded by the
-          module. If user_name refers to a non-admin account only
-          new_password is needed.
+        -   Attribute key-value pairs for the singleton object identified by module_name and obj_name. Key
+            names match the REST attribute names with hyphens replaced by underscores. Using hyphens may cause
+            erroneous behaviour due to Ansible parsing.
+        -   The specific sub-keys required depend on the obj_name value. All sub-keys listed below are
+            optional and drawn from the known singleton objects in the collection. Keys not listed here may
+            still be passed for singleton objects not covered by a dedicated module.
+        -   Special note for brocade_security / password - old_password and new_password are supplied in plain
+            text and are encoded by the module. If user_name refers to a non-admin account only new_password
+            is needed.
         required: true
         type: dict
         suboptions:
             user_name:
                 description:
-                - Account or local user name. Used with brocade_security
-                  password, sshutil_public_key_action, and user_config
-                  objects.
-                required: false
+                -   Account or local user name. Used with brocade_security password,
+                    sshutil_public_key_action, and user_config objects.
                 type: str
             old_password:
                 description:
-                - Existing password in plain text. Used with brocade_security
-                  password object.
-                required: false
+                -   Existing password in plain text. Used with brocade_security password object.
                 type: str
             new_password:
                 description:
-                - New password in plain text. Used with brocade_security
-                  password object.
-                required: false
-                type: str
-            action:
-                description:
-                - Operation to perform. Used with sshutil_public_key_action
-                  (import, export) and sec_crypto_cfg_template_action
-                  (import, export, apply).
-                required: false
+                -   New password in plain text. Used with brocade_security password object.
                 type: str
             operation:
                 description:
-                - Certificate operation such as import or export. Used with
-                  brocade_security security_certificate_action object.
-                required: false
+                -   Certificate operation such as import or export. Used with brocade_security
+                    security_certificate_action object.
                 type: str
             certificate_entity:
                 description:
-                - Certificate entity type (e.g. CSC, switch). Used with
-                  brocade_security security_certificate_action object.
-                required: false
+                -   Certificate entity type (e.g. CSC, switch). Used with brocade_security
+                    security_certificate_action object.
                 type: str
             certificate_type:
                 description:
-                - Certificate type (e.g. https, ldap). Used with
-                  brocade_security security_certificate_action object.
-                required: false
+                -   Certificate type (e.g. https, ldap). Used with brocade_security
+                    security_certificate_action object.
                 type: str
             certificate_name:
                 description:
-                - Certificate file name. Used with brocade_security
-                  security_certificate_action object.
-                required: false
+                -   Certificate file name. Used with brocade_security security_certificate_action object.
                 type: str
             remote_host_ip:
                 description:
-                - IP address of the remote host for file transfer. Used with
-                  security_certificate_action, sshutil_public_key_action, and
-                  sec_crypto_cfg_template_action objects.
-                required: false
+                -   IP address of the remote host for file transfer. Used with security_certificate_action,
+                    sshutil_public_key_action, and sec_crypto_cfg_template_action objects.
                 type: str
             remote_host_port:
                 description:
-                - Port number on the remote host for file transfer.
-                required: false
+                -   Port number on the remote host for file transfer.
                 type: int
             remote_user_name:
                 description:
-                - User name on the remote host. Used with
-                  security_certificate_action, sshutil_public_key_action, and
-                  sec_crypto_cfg_template_action objects.
-                required: false
+                -   User name on the remote host. Used with security_certificate_action,
+                    sshutil_public_key_action, and sec_crypto_cfg_template_action objects.
                 type: str
             remote_user_password:
                 description:
-                - Password for the remote host user. Encoded automatically
-                  by the module. Not logged. Used with
-                  security_certificate_action, sshutil_public_key_action, and
-                  sec_crypto_cfg_template_action objects.
-                required: false
+                -   Password for the remote host user. Encoded automatically by the module. Not logged. Used
+                    with security_certificate_action, sshutil_public_key_action, and
+                    sec_crypto_cfg_template_action objects.
                 type: str
             remote_directory:
                 description:
-                - Directory path on the remote host. Used with
-                  security_certificate_action, sshutil_public_key_action, and
-                  sec_crypto_cfg_template_action objects.
-                required: false
+                -   Directory path on the remote host. Used with security_certificate_action,
+                    sshutil_public_key_action, and sec_crypto_cfg_template_action objects.
                 type: str
             protocol:
                 description:
-                - Transfer protocol for remote file operations (e.g. scp,
-                  sftp, ftp). Used with security_certificate_action and
-                  sshutil_public_key_action objects.
-                required: false
-                type: str
-            file_transfer_protocol_type:
-                description:
-                - Transfer protocol for crypto template file operations (scp,
-                  sftp, ftp). Used with
-                  brocade_security sec_crypto_cfg_template_action object.
-                choices: [scp, sftp, ftp]
-                required: false
+                -   Transfer protocol for remote file operations (e.g. scp, sftp, ftp). Used with
+                    security_certificate_action and sshutil_public_key_action objects.
                 type: str
             public_key_name:
                 description:
-                - SSH public key file name. Used with brocade_security
-                  sshutil_public_key_action object.
-                required: false
+                -   SSH public key file name. Used with brocade_security sshutil_public_key_action object.
+                type: str
+            action:
+                description:
+                -   Operation to perform. Used with sshutil_public_key_action (import, export) and
+                    sec_crypto_cfg_template_action (import, export, apply).
                 type: str
             template_name:
                 description:
-                - Crypto config template name. Used with brocade_security
-                  sec_crypto_cfg_template_action object.
-                required: false
+                -   Crypto config template name. Used with brocade_security sec_crypto_cfg_template_action
+                    object.
+                type: str
+            file_transfer_protocol_type:
+                description:
+                -   Transfer protocol for crypto template file operations (scp, sftp, ftp). Used with
+                    brocade_security sec_crypto_cfg_template_action object.
                 type: str
             port_group_policy_enabled:
                 description:
-                - Enable or disable the port-group policy on an Access
-                  Gateway. Used with brocade_access_gateway policy object.
-                required: false
+                -   Enable or disable the port-group policy on an Access Gateway. Used with
+                    brocade_access_gateway policy object.
                 type: bool
             auto_policy_enabled:
                 description:
-                - Enable or disable the auto policy on an Access Gateway.
-                  Used with brocade_access_gateway policy object.
-                required: false
+                -   Enable or disable the auto policy on an Access Gateway. Used with brocade_access_gateway
+                    policy object.
                 type: bool
             reliability_counter:
                 description:
-                - N-Port reliability counter value. Used with
-                  brocade_access_gateway n_port_settings object.
-                required: false
+                -   N-Port reliability counter value. Used with brocade_access_gateway n_port_settings object.
                 type: int
             maps_policy:
                 description:
-                - Active MAPS policy name. Used with brocade_maps maps_config
-                  object.
-                required: false
+                -   Active MAPS policy name. Used with brocade_maps maps_config object.
                 type: str
             relay_ip_address:
                 description:
-                - MAPS email relay server IP address. Used with brocade_maps
-                  maps_config object.
-                required: false
+                -   MAPS email relay server IP address. Used with brocade_maps maps_config object.
                 type: str
             domain_name:
                 description:
-                - MAPS email relay domain name. Used with brocade_maps
-                  maps_config object.
-                required: false
+                -   MAPS email relay domain name. Used with brocade_maps maps_config object.
                 type: str
             sender_address:
                 description:
-                - MAPS email sender address. Used with brocade_maps
-                  maps_config object.
-                required: false
+                -   MAPS email sender address. Used with brocade_maps maps_config object.
                 type: str
             recipient_address_list:
                 description:
-                - Dict containing a recipient_address list of email
-                  recipients. Used with brocade_maps maps_config object.
-                required: false
+                -   Dict containing a recipient_address list of email recipients. Used with brocade_maps
+                    maps_config object.
                 type: dict
             actions:
                 description:
-                - Dict of MAPS actions to perform on alert. Used with
-                  brocade_maps maps_config object.
-                required: false
+                -   Dict of MAPS actions to perform on alert. Used with brocade_maps maps_config object.
                 type: dict
             chassis_user_friendly_name:
                 description:
-                - User-friendly chassis name string. Used with brocade_chassis
-                  chassis object.
-                required: false
+                -   User-friendly chassis name string. Used with brocade_chassis chassis object.
                 type: str
             insistent_domain_id_enabled:
                 description:
-                - Enable insistent domain ID feature. Used with
-                  brocade_fibrechannel_configuration fabric object.
-                required: false
+                -   Enable insistent domain ID feature. Used with brocade_fibrechannel_configuration fabric
+                    object.
                 type: bool
             preserved_domain_id_mode_enabled:
                 description:
-                - Enable preserved domain ID mode. Used with
-                  brocade_fibrechannel_configuration fabric object.
-                required: false
+                -   Enable preserved domain ID mode. Used with brocade_fibrechannel_configuration fabric
+                    object.
                 type: bool
             principal_selection_enabled:
                 description:
-                - Enable principal switch selection. Must be specified
-                  together with principal_priority. Used with
-                  brocade_fibrechannel_configuration fabric object.
-                required: false
+                -   Enable principal switch selection. Must be specified together with principal_priority.
+                    Used with brocade_fibrechannel_configuration fabric object.
                 type: bool
             principal_priority:
                 description:
-                - Principal switch priority value (hex string, e.g. 0x6).
-                  Must be specified together with principal_selection_enabled.
-                  Used with brocade_fibrechannel_configuration fabric object.
-                required: false
+                -   Principal switch priority value (hex string, e.g. 0x6). Must be specified together with
+                    principal_selection_enabled. Used with brocade_fibrechannel_configuration fabric object.
                 type: str
             portname_mode:
                 description:
-                - Port naming mode (e.g. dynamic, default). Used with
-                  brocade_fibrechannel_configuration port_configuration
-                  object.
-                required: false
+                -   Port naming mode (e.g. dynamic, default). Used with brocade_fibrechannel_configuration
+                    port_configuration object.
                 type: str
             dynamic_portname_format:
                 description:
-                - Dynamic port name format string (e.g. I.T.A.R). Used with
-                  brocade_fibrechannel_configuration port_configuration
-                  object.
-                required: false
+                -   Dynamic port name format string (e.g. I.T.A.R). Used with
+                    brocade_fibrechannel_configuration port_configuration object.
                 type: str
             audit_enabled:
                 description:
-                - Enable or disable audit logging. Used with brocade_logging
-                  audit object.
-                required: false
+                -   Enable or disable audit logging. Used with brocade_logging audit object.
                 type: bool
             severity_level:
                 description:
-                - Minimum severity level for audit log events (e.g. info,
-                  warning, error, critical). Used with brocade_logging audit
-                  object.
-                required: false
+                -   Minimum severity level for audit log events (e.g. info, warning, error, critical). Used
+                    with brocade_logging audit object.
                 type: str
             filter_class_list:
                 description:
-                - Dict containing a filter_class list of audit filter
-                  classes (e.g. zone, security, configuration, firmware,
-                  fabric, ls, cli, maps). Used with brocade_logging audit
-                  object.
-                required: false
+                -   Dict containing a filter_class list of audit filter classes (e.g. zone, security,
+                    configuration, firmware, fabric, ls, cli, maps). Used with brocade_logging audit object.
                 type: dict
             name:
                 description:
-                - IANA time zone name (e.g. America/Chicago). Used with
-                  brocade_time time_zone object.
-                required: false
+                -   IANA time zone name (e.g. America/Chicago). Used with brocade_time time_zone object.
                 type: str
             ntp_server_address:
                 description:
-                - Dict containing a server_address list of NTP server IP
-                  addresses. Used with brocade_time clock_server object.
-                required: false
+                -   Dict containing a server_address list of NTP server IP addresses. Used with brocade_time
+                    clock_server object.
                 type: dict
             audit_interval:
                 description:
-                - SNMP audit interval in minutes. Used with brocade_snmp
-                  system object.
-                required: false
+                -   SNMP audit interval in minutes. Used with brocade_snmp system object.
                 type: int
             contact:
                 description:
-                - SNMP system contact string. Used with brocade_snmp system
-                  object.
-                required: false
+                -   SNMP system contact string. Used with brocade_snmp system object.
                 type: str
             description:
                 description:
-                - SNMP system description string. Used with brocade_snmp
-                  system object.
-                required: false
+                -   SNMP system description string. Used with brocade_snmp system object.
                 type: str
             encryption_enabled:
                 description:
-                - Enable SNMP encryption. Used with brocade_snmp system
-                  object.
-                required: false
+                -   Enable SNMP encryption. Used with brocade_snmp system object.
                 type: bool
             informs_enabled:
                 description:
-                - Enable SNMP inform notifications. Used with brocade_snmp
-                  system object.
-                required: false
+                -   Enable SNMP inform notifications. Used with brocade_snmp system object.
                 type: bool
             location:
                 description:
-                - SNMP system physical location string. Used with brocade_snmp
-                  system object.
-                required: false
+                -   SNMP system physical location string. Used with brocade_snmp system object.
                 type: str
             security_get_level_string:
                 description:
-                - SNMP security level for GET operations (e.g.
-                  authentication-and-privacy). Used with brocade_snmp system
-                  object.
-                required: false
+                -   SNMP security level for GET operations (e.g. authentication-and-privacy). Used with
+                    brocade_snmp system object.
                 type: str
             security_set_level_string:
                 description:
-                - SNMP security level for SET operations (e.g.
-                  authentication-and-privacy). Used with brocade_snmp system
-                  object.
-                required: false
+                -   SNMP security level for SET operations (e.g. authentication-and-privacy). Used with
+                    brocade_snmp system object.
                 type: str
-
 """
 
 
-EXAMPLES = """
-
-  gather_facts: False
-
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
   vars:
     credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
+      fos_ip_addr: '{{ fos_ip_addr }}'
       fos_user_name: user_name
       fos_password: user_password
-      https: False
-
+      https: "false"
   tasks:
-
-  - name: change password
-    brocade_singleton_obj:
-      credential: "{{credential}}"
-      vfid: -1
-      module_name: "brocade-security"
-      obj_name: "password"
-      attributes:
-        user_name: "user"
-        new_password: "xxxx"
-        old_password: "yyyy"
-
+    - name: Change password
+      brocade.fos.brocade_singleton_obj:
+        credential: '{{ credential }}'
+        vfid: -1
+        module_name: brocade-security
+        obj_name: password
+        attributes:
+          user_name: user
+          new_password: xxxx
+          old_password: yyyy
 """
 
 
-RETURN = """
+RETURN = r"""
 
 msg:
-    description: Success message
+    description: Success message.
     returned: success
     type: str
 
