@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_singleton_obj_facts
 short_description: Brocade Fibre Channel generic facts gathering for singleton objects
-version_added: '2.6'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Gather Fibre Channel FOS facts for singleton objects.

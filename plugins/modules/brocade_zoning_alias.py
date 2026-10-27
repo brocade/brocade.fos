@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_zoning_alias
 short_description: Brocade Fibre Channel zoning alias configuration
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Create, delete, or update aliases. Changes are applied to FOS within a single login session that ends

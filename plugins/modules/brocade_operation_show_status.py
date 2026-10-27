@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_operation_show_status
 short_description: Brocade Fibre Channel operation status retrieval
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Retrieve Fibre Channel operation status.

@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_singleton_obj
 short_description: Brocade Fibre Channel generic handler for singleton object
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Update list of attributes based on module name and object name provided.

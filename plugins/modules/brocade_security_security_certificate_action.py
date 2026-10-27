@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_security_security_certificate_action
 short_description: Brocade Fibre Channel third-party certificate installation
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Use to import or export certificate.

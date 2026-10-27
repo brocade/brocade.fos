@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_zoning_cfg_disable
 short_description: Brocade Fibre Channel zoning disable configuration
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Disable the active zoning configuration.

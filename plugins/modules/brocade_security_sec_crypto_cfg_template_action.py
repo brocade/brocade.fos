@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_security_sec_crypto_cfg_template_action
 short_description: Brocade Fibre Channel security crypto template file actions
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Use to perform actions on the crypto template files. The module performs the action each time and is not

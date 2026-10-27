@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_fabric_switch_facts_by_pid
 short_description: Brocade Fibre Channel switch find by connected device's pid
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Fibre Channel switch find by connected device's PID.

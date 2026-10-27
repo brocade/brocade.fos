@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_security_sshutil_public_key
 short_description: Brocade Fibre Channel security SSH public key delete
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Use to delete public key.

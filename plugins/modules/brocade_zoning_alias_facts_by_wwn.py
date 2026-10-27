@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_zoning_alias_facts_by_wwn
 short_description: Brocade Fibre Channel facts gathering of zoning by WWN
-version_added: '2.6'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Gather Fibre Channel FOS facts.

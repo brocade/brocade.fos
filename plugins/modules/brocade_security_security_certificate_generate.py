@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_security_security_certificate_generate
 short_description: Brocade Fibre Channel security CSR or certificate generation like HTTPS, LDAP, etc
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Use to generate CSR or certificate.

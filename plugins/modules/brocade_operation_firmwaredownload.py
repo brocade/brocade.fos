@@ -13,7 +13,7 @@ DOCUMENTATION = r"""
 
 module: brocade_operation_firmwaredownload
 short_description: Brocade Fibre Channel operation firmwaredownload
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Initiate Fibre Channel firmwaredownload.

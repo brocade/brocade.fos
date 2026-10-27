@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_list_obj
 short_description: Brocade Fibre Channel general list processing
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Update Fibre Channel list of objects based on module name and list name provided.

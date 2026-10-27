@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_logging_audit
 short_description: Brocade Fibre Channel logging audit configuration
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Update Fibre Channel logging audit configuration.

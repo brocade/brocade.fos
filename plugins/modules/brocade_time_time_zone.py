@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_time_time_zone
 short_description: Brocade Fibre Channel time zone configuration
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Update time zone configuration.

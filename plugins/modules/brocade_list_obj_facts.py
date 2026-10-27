@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_list_obj_facts
 short_description: Brocade Fibre Channel generic facts gathering for list objects
-version_added: '2.6'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Gather Fibre Channel FOS facts for objects that are defined as list in YANG.

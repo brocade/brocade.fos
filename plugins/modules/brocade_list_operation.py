@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_list_operation
 short_description: Brocade Fibre Channel operation with the container input
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Perform specified operation.

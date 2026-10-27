@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_security_sshutil_public_key_action
 short_description: Brocade Fibre Channel public key export or import
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Use to export or import public keys.

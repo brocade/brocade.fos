@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_facts
 short_description: Brocade Fibre Channel facts gathering
-version_added: '2.6'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Gather FOS facts.
