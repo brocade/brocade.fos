@@ -29,6 +29,7 @@ issues: https://github.com/brocade/brocade.fos/issues
 build_ignore:
   - .git*
   - .vscode
+  - .devcontainer
   - .claude
   - CLAUDE.md
   - .ansible-lint
@@ -41,10 +42,11 @@ build_ignore:
   - .python-version
   - ruff.toml
   - dev-requirements.txt
+  - hacking
   - changelogs/fragments
   - changelogs/config.yaml
   - tests/output
-  - tests/sanity/code_sanity_*.log
+  - tests/sanity/*.log
   - importer_result.json
   - __pycache__
   - "*.pyc"

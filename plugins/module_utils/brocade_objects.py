@@ -1611,6 +1611,10 @@ def list_delete_helper(
     module.exit_json(**result)
 
 
+def _split_list(cell):
+    return [item.strip() for item in cell.split(",") if item.strip()]
+
+
 def _read_file(path, result, module):
     if not Path(path).exists():
         result["failed"] = True
@@ -1618,97 +1622,32 @@ def _read_file(path, result, module):
         module.exit_json(**result)
     with Path(path).open("r") as fp:
         contents = fp.read()
-    # Find the table section
-    table_pattern = r"\+===============.*?(?=\n\n|\Z)"
-    table_match = re.search(table_pattern, contents, re.DOTALL)
 
-    if not table_match:
-        return {}
-
-    table_text = table_match.group(0)
-    lines = table_text.split("\n")
-
-    result = {}
-    current_fos_ansible = None
-    current_ga_date = None
-    current_fos_versions = []
-    current_fos_version = None
-    current_tested_with = []
-    current_notes = None
-
-    for line in lines:
-        # Skip separator lines
-        if line.startswith("+===") or line.startswith("+---"):
+    # Release history is a Markdown table with one row per release, newest first.
+    releases = {}
+    for line in contents.splitlines():
+        if not line.startswith("|"):
             continue
-
-        # Parse data lines
-        if line.startswith("|"):
-            # Split by pipe and clean up
-            parts = [p.strip() for p in line.split("|")[1:-1]]  # Remove empty first/last
-
-            if len(parts) != 5:
-                continue
-
-            fos_ansible, ga_date, fos, tested_with, notes = parts
-
-            # New brocade.fos version entry
-            if fos_ansible and fos_ansible != "brocade.fos":
-                # Save previous entry if exists
-                if current_fos_ansible:
-                    if current_fos_version:
-                        current_fos_versions.append(
-                            {"version": current_fos_version, "tested_with": current_tested_with}
-                        )
-
-                    result[current_fos_ansible] = {
-                        "ga_date": current_ga_date,
-                        "fos_versions": current_fos_versions,
-                        "notes": current_notes,
-                    }
-
-                # Start new entry
-                current_fos_ansible = fos_ansible
-                current_ga_date = ga_date
-                current_fos_versions = []
-                current_fos_version = None
-                current_tested_with = []
-                current_notes = notes
-
-            # Parse FOS version
-            if fos and current_fos_ansible:
-                # Save previous FOS version if exists
-                if current_fos_version:
-                    current_fos_versions.append({"version": current_fos_version, "tested_with": current_tested_with})
-
-                # Start new FOS version
-                current_fos_version = fos
-                current_tested_with = []
-
-                # Add tested_with if present on same line
-                if tested_with:
-                    current_tested_with.append(tested_with)
-
-            # Continue with tested_with on continuation lines
-            elif tested_with and current_fos_ansible:
-                current_tested_with.append(tested_with)
-
-    # Save last entry
-    if current_fos_ansible:
-        if current_fos_version:
-            current_fos_versions.append({"version": current_fos_version, "tested_with": current_tested_with})
-
-        result[current_fos_ansible] = {
-            "ga_date": current_ga_date,
-            "fos_versions": current_fos_versions,
-            "notes": current_notes,
+        parts = [part.strip() for part in line.strip().strip("|").split("|")]
+        if len(parts) != 6:
+            continue
+        brocade_fos, ga_date, fos, ansible_core, python, notes = parts
+        if brocade_fos == "brocade.fos" or set(brocade_fos) <= set("-: "):
+            continue  # header and separator rows
+        tested_with = [f"ansible-core: {ver}" for ver in _split_list(ansible_core)]
+        tested_with += [f"python: {ver}" for ver in _split_list(python)]
+        releases[brocade_fos] = {
+            "ga_date": ga_date,
+            "fos_versions": [{"version": ver, "tested_with": tested_with} for ver in _split_list(fos)],
+            "notes": notes,
         }
-        return result
+    return releases
 
 
 def _fos_module_defined(content, result):
     is_mod_utils_defined = bool()
     is_lib_defined = bool()
-    filename = "versioning.rst"
+    filename = "versioning.md"
 
     for line in content:
         if not is_mod_utils_defined and re.search(r"module_utils", line):
@@ -1738,7 +1677,7 @@ def module_compatibility_helper(module, fos_ip_addr, fos_user_name, fos_password
     result["failed"] = True
     result["response"] = "Module(s) are not compatible with the given switch"
     fcontent = str()
-    filename = "versioning.rst"
+    filename = "versioning.md"
     if Path(filename).exists():
         fcontent = _read_file(filename, result, module)
     elif os.getenv("BROCADE_VERSION_PATH"):  # BROCADE_VERSION_PATH defined
@@ -1746,7 +1685,7 @@ def module_compatibility_helper(module, fos_ip_addr, fos_user_name, fos_password
             result["failed"] = True
             result["response"] = f"{os.getenv('BROCADE_VERSION_PATH')} must point to {filename}"
             exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-        elif Path(os.getenv("BROCADE_VERSION_PATH")).stem == filename:
+        elif Path(os.getenv("BROCADE_VERSION_PATH")).name == filename:
             fcontent = _read_file(os.getenv("BROCADE_VERSION_PATH"), result, module)
         elif (Path(os.getenv("BROCADE_VERSION_PATH")).parent / filename).exists():
             fcontent = _read_file(Path(os.getenv("BROCADE_VERSION_PATH")).parent / filename, result, module)
@@ -1792,7 +1731,7 @@ def module_compatibility_helper(module, fos_ip_addr, fos_user_name, fos_password
 
         result["switchversionansible"] = supported_versions
         result["switchversion"] = fos_version
-        # restrict version data to bare versions defined in versioning.rst
+        # restrict version data to bare versions defined in versioning.md
         normalized_fos_version = fos_version.split("_")[0] if "_" in fos_version else fos_version
         if normalized_fos_version in supported_versions:
             result["failed"] = False

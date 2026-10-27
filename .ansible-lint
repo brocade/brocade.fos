@@ -6,6 +6,7 @@ exclude_paths:
   - .mypy_cache/
   - changelogs/
   - docs/
+  - tests/output/
 
 kinds:
   - playbook: "playbooks/tasks/**/*.yml"

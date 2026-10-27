@@ -11,7 +11,7 @@ SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 REPO_ROOT="$(realpath "${SCRIPT_DIR}/..")"
 pushd "${SCRIPT_DIR}"
 COLLECTIONS_PATH=$(mktemp -d)
-trap "{ popd; unset ANSIBLE_COLLECTIONS_PATH; rm -rf '${COLLECTIONS_PATH}'; }" EXIT
+trap '{ popd; unset ANSIBLE_COLLECTIONS_PATH; rm -rf "${COLLECTIONS_PATH}"; }' EXIT
 
 # Build and install the collection so antsibull-docs can discover it
 VERSION=$(grep '^version:' "${REPO_ROOT}/galaxy.yml" | awk '{print $2}')

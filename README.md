@@ -7,7 +7,7 @@ switches.
 
 ## Requirements
 
-- See the [compatibility matrix](https://github.com/brocade/brocade.fos/blob/main/versioning.rst)
+- See the [compatibility matrix](https://github.com/brocade/brocade.fos/blob/main/versioning.md)
   for tested Python, ansible-core, and FOS versions.
 - The minimum Ansible version is declared in
   [meta/runtime.yml](https://github.com/brocade/brocade.fos/blob/main/meta/runtime.yml).
@@ -70,7 +70,7 @@ Replace `main` with a tag or commit to select a specific source revision.
 ### Development dependencies
 
 For development dependencies, testing, and documentation tools, follow the
-[Development Setup guide](https://github.com/brocade/brocade.fos/blob/main/CONTRIBUTING.rst#development-setup).
+[Development Setup guide](https://github.com/brocade/brocade.fos/blob/main/CONTRIBUTING.md#development-setup).
 
 ## Connection to FOS
 
@@ -535,7 +535,7 @@ The maintainer contact is [Automation.BSN@broadcom.com](mailto:Automation.BSN@br
 ## Release notes
 
 See the [changelog](https://github.com/brocade/brocade.fos/blob/main/CHANGELOG.rst)
-and [version history](https://github.com/brocade/brocade.fos/blob/main/versioning.rst).
+and [version history](https://github.com/brocade/brocade.fos/blob/main/versioning.md).
 
 ## License
 

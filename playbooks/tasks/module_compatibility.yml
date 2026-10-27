@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 # Note: Please set 'BROCADE_VERSION_PATH' environment variable
-# to the version file 'versioning.rst'
+# to the version file 'versioning.md'
 # By default galaxy collection is installed under ~/.ansible/collections,
 # in that case the following example shows how to set the environment variable
 # in the Linux system
-# export BROCADE_VERSION_PATH=~/.ansible/collections/ansible_collections/brocade/fos/versioning.rst
+# export BROCADE_VERSION_PATH=~/.ansible/collections/ansible_collections/brocade/fos/versioning.md
 
 - name: Check module compatibility with switch version
   hosts: fos_switches

@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_ips_facts
 short_description: Brocade IP storage facts gathering
-version_added: '1.0'
+version_added: "2.1.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Gather IPS facts.

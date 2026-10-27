@@ -14,7 +14,7 @@ DOCUMENTATION = r"""
 
 module: brocade_zoning_zone
 short_description: Brocade Fibre Channel zone configuration
-version_added: '2.7'
+version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
 -   Create, delete, or update zones. Changes are applied to FOS within a single login session that ends

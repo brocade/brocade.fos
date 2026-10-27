@@ -1,6 +1,7 @@
 ### IDEs and editors ###
 .idea
 .vscode
+.devcontainer
 
 ### Claude Code ###
 CLAUDE.md
@@ -8,8 +9,8 @@ CLAUDE.md
 
 ### force add directories ###
 !README.rst
-!CONTRIBUTING.rst
-!versioning.rst
+!CONTRIBUTING.md
+!versioning.md
 
 ### files ###
 **/*.swp
@@ -69,7 +70,7 @@ docs/rst/
 
 ### Dev tools ###
 .venv/
-tests/sanity/code_sanity_*.log
+tests/sanity/*.log
 
 # Local certification and Ansible test output
 tests/output/

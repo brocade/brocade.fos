@@ -17,15 +17,15 @@ from ansible_collections.brocade.fos.plugins.modules import brocade_facts, broca
 
 
 class ModuleResultError(Exception):
-    def __init__(self, result):
+    def __init__(self, *, result):
         super().__init__(result)
         self.result = result
 
 
 @pytest.fixture
-def module_args(monkeypatch):
+def module_args(*, monkeypatch):
     def exit_json(self, **result):
-        raise ModuleResultError(result)
+        raise ModuleResultError(result=result)
 
     monkeypatch.setattr(basic.AnsibleModule, "exit_json", exit_json)
     monkeypatch.setattr(basic.AnsibleModule, "fail_json", exit_json)
@@ -66,7 +66,7 @@ def module_args(monkeypatch):
     ],
 )
 def test_underscore_operation_parameters_reach_rest_helper(
-    monkeypatch, module_args, module_name, option, inputs, extra
+    *, monkeypatch, module_args, module_name, option, inputs, extra
 ):
     module = importlib.import_module("ansible_collections.brocade.fos.plugins.modules." + module_name)
     module_args(**{option: inputs, **extra})
@@ -84,7 +84,7 @@ def test_underscore_operation_parameters_reach_rest_helper(
         assert received[key] == value
 
 
-def test_facts_read_switch_in_check_mode(monkeypatch, module_args):
+def test_facts_read_switch_in_check_mode(*, monkeypatch, module_args):
     module_args(gather_subset=["brocade_chassis_chassis"], _ansible_check_mode=True)
     monkeypatch.setattr(brocade_facts, "login", Mock(return_value=(0, "session", "v10.0.1")))
     getter = Mock(return_value=(0, {"Response": {"chassis": {"chassis_user_friendly_name": "lab"}}}))
@@ -103,7 +103,7 @@ def test_facts_read_switch_in_check_mode(monkeypatch, module_args):
     logout.assert_called_once()
 
 
-def test_zoning_lists_preserve_nested_values(monkeypatch, module_args):
+def test_zoning_lists_preserve_nested_values(*, monkeypatch, module_args):
     aliases = [{"name": "lab_alias", "members": ["10:00:00:00:00:00:00:01"]}]
     module_args(aliases=aliases)
     monkeypatch.setattr(brocade_zoning_alias, "login", Mock(return_value=(0, "session", "v10.0.1")))

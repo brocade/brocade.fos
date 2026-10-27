@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 """
-Executes checks on the codebase to ensure it meets the standards.
+Run Ruff, Ansible Lint, and copyright/license header checks.
 """
 
 import argparse
@@ -65,8 +65,12 @@ _LOG_DATEFMT = "%Y%m%d-%H%M%S"
 # Timeout in seconds for each linter (ansible-lint in collection repos can be slow)
 LINTER_TIMEOUT = 300
 
-# Log files in this directory (code_sanity_*.log) older than this many days are deleted on each run
+# Log files in this directory (lint_header_check_*.log) older than this many days are deleted on each run
 LOG_RETENTION_DAYS = 7
+
+
+class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    """Show argument defaults while preserving usage examples."""
 
 
 class ColoredFormatter(logging.Formatter):
@@ -80,8 +84,8 @@ class ColoredFormatter(logging.Formatter):
         logging.CRITICAL: _BOLD + _RED,
     }
 
-    def __init__(self, fmt: str = "%(asctime)s %(message)s", datefmt: str | None = _LOG_DATEFMT, **kwargs):  # noqa: ANN003
-        super().__init__(fmt, datefmt=datefmt, **kwargs)
+    def __init__(self, *, fmt: str = "%(asctime)s %(message)s", datefmt: str | None = _LOG_DATEFMT, **kwargs):  # noqa: ANN003
+        super().__init__(fmt=fmt, datefmt=datefmt, **kwargs)
 
     def format(self, record: logging.LogRecord) -> str:
         color = self.LEVEL_COLORS.get(record.levelno, _RESET)
@@ -91,11 +95,11 @@ class ColoredFormatter(logging.Formatter):
         return msg
 
 
-def cleanup_old_logs(log_dir: Path, retention_days: int = LOG_RETENTION_DAYS) -> list[Path]:
-    """Delete code_sanity_*.log files in log_dir last modified more than retention_days ago. Returns deleted paths."""
+def cleanup_old_logs(*, log_dir: Path, retention_days: int = LOG_RETENTION_DAYS) -> list[Path]:
+    """Delete expired lint_header_check_*.log files from log_dir and return their paths."""
     cutoff = time.time() - retention_days * 24 * 60 * 60
     deleted: list[Path] = []
-    for log_file in log_dir.glob("code_sanity_*.log"):
+    for log_file in log_dir.glob("lint_header_check_*.log"):
         try:
             if log_file.is_file() and log_file.stat().st_mtime < cutoff:
                 log_file.unlink()
@@ -105,18 +109,18 @@ def cleanup_old_logs(log_dir: Path, retention_days: int = LOG_RETENTION_DAYS) ->
     return deleted
 
 
-def setup_logging(verbose: bool = False) -> logging.Logger:
+def setup_logging(*, verbose: bool = False) -> logging.Logger:
     """Configure colored console logging and a timestamped log file. Returns the module logger."""
     log = logging.getLogger(__name__)
     if log.handlers:
         return log
     log.setLevel(logging.DEBUG)
 
-    # Log file in same directory as script: tests/sanity/code_sanity_<timestamp>.log
+    # Log file in same directory as script: tests/sanity/lint_header_check_<timestamp>.log
     script_dir = Path(__file__).resolve().parent
-    deleted_logs = cleanup_old_logs(script_dir)
+    deleted_logs = cleanup_old_logs(log_dir=script_dir)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_path = script_dir / f"code_sanity_{timestamp}.log"
+    log_path = script_dir / f"lint_header_check_{timestamp}.log"
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", datefmt=_LOG_DATEFMT))
@@ -126,13 +130,13 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.setLevel(logging.DEBUG)
     stdout_handler.addFilter(lambda r: r.levelno < logging.ERROR)
-    stdout_handler.setFormatter(ColoredFormatter("%(asctime)s %(message)s"))
+    stdout_handler.setFormatter(ColoredFormatter(fmt="%(asctime)s %(message)s"))
     log.addHandler(stdout_handler)
 
     # Stderr: ERROR and CRITICAL
     stderr_handler = logging.StreamHandler(sys.stderr)
     stderr_handler.setLevel(logging.ERROR)
-    stderr_handler.setFormatter(ColoredFormatter("%(asctime)s %(message)s"))
+    stderr_handler.setFormatter(ColoredFormatter(fmt="%(asctime)s %(message)s"))
     log.addHandler(stderr_handler)
 
     log.setLevel(logging.DEBUG if verbose else logging.INFO)
@@ -141,7 +145,7 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
     return log
 
 
-def check_dependencies(log: logging.Logger) -> None:
+def check_dependencies(*, log: logging.Logger) -> dict[str, str]:
     """Check that ruff and ansible-lint are available. Exit with error message if not."""
     missing = []
     if not which("ruff"):
@@ -161,7 +165,7 @@ def check_dependencies(log: logging.Logger) -> None:
     return {"ansible-lint": which("ansible-lint"), "ruff": which("ruff"), "python": f"{python_path}/bin/python"}
 
 
-def find_repo_root(start: Path) -> Path:
+def find_repo_root(*, start: Path) -> Path:
     """Find repository root (directory containing .git or .ansible-lint or galaxy.yml)."""
     current = start.resolve()
     for _unused in range(20):
@@ -178,7 +182,7 @@ def find_repo_root(start: Path) -> Path:
     return start.resolve()
 
 
-def collect_files(path: Path, repo_root: Path) -> tuple[list[Path], list[Path]]:
+def collect_files(*, path: Path, repo_root: Path) -> tuple[list[Path], list[Path]]:
     """Return (py_files, yaml_files) under path (file or directory), paths relative to repo_root."""
     path = path.resolve()
     py_files: list[Path] = []
@@ -219,14 +223,12 @@ def collect_files(path: Path, repo_root: Path) -> tuple[list[Path], list[Path]]:
     return py_files, yaml_files
 
 
-def run_ruff(**kwargs) -> tuple[list[dict], int]:
+def run_ruff(*, repo: Path, files: list[Path], fix: bool = False, verbose: bool = False) -> tuple[list[dict], int]:
     """
     Run ruff format (if fix=True) and then ruff check on paths. Return (list of violation dicts, exit_code)
     """
-    repo_root = kwargs["repo"]
-    paths = kwargs["files"]
-    fix = kwargs["fix"]
-    verbose = kwargs["verbose"]
+    repo_root = repo
+    paths = files
     if not paths:
         return [], 0
 
@@ -354,22 +356,24 @@ def run_ruff(**kwargs) -> tuple[list[dict], int]:
     return out, rc_code
 
 
-def run_ansible_lint(**kwargs) -> tuple[list[dict], int]:
+def run_ansible_lint(
+    *, repo: Path, files: list[Path] | None, fix: bool = False, verbose: bool = False
+) -> tuple[list[dict], int]:
     """
-    Run ansible-lint on paths. Return (list of violation dicts, exit_code).
+    Run ansible-lint on paths. Return (results, 0 for success, 1 for violations, 2 for tool errors).
+    files=None enables native discovery; an empty list skips the command.
+    In fix mode, results contain fixes; a subsequent check reports remaining violations.
     """
-    repo_root = kwargs["repo"]
-    paths = kwargs["files"]
-    fix = kwargs["fix"]
-    verbose = kwargs["verbose"]
+    repo_root = repo
+    paths = files
 
-    if not paths:
+    if paths is not None and not paths:
         return [], 0
     cmd = [
         "ansible-lint",
         "-f",
         "json",
-        "--config-file",
+        "-c",
         f"{repo_root}/.ansible-lint",
         "--profile",
         "production",
@@ -377,8 +381,8 @@ def run_ansible_lint(**kwargs) -> tuple[list[dict], int]:
     ]
     if fix:
         cmd.append("--fix")
-    full_paths = [str(repo_root / p) for p in paths]
-    cmd.extend(full_paths)
+    if paths is not None:
+        cmd.extend(str(repo_root / p) for p in paths)
     if verbose:
         log = logging.getLogger(__name__)
         log.debug("Running: %s", " ".join(cmd))
@@ -396,22 +400,39 @@ def run_ansible_lint(**kwargs) -> tuple[list[dict], int]:
         return [], 2
     except subprocess.TimeoutExpired:
         logging.getLogger(__name__).error("Ansible-lint timed out after %s", LINTER_TIMEOUT)
-        return [], -1
+        return [], 2
+
+    log = logging.getLogger(__name__)
+    # Ansible Lint uses 2 for violations and 8 for a successful fix-only run.
+    if result.returncode not in ((0, 2, 8) if fix else (0, 2)):
+        log.error("ansible-lint exited with code %s", result.returncode)
+        if result.stderr:
+            log.error("ansible-lint stderr: %s", result.stderr.strip())
+        return [], 2
 
     violations = []
-    if result.stdout.strip():
-        try:
-            data = json.loads(result.stdout)
-            if isinstance(data, list):
-                violations = data
-            elif isinstance(data, dict) and "files" in data:
-                for file_data in data.get("files", {}).values():
-                    if isinstance(file_data, dict) and "matches" in file_data:
-                        violations.extend(file_data["matches"])
-            elif isinstance(data, dict) and "matches" in data:
-                violations = data["matches"]
-        except json.JSONDecodeError:
-            pass
+    try:
+        data = json.loads(result.stdout)
+        if isinstance(data, list):
+            violations = data
+        elif isinstance(data, dict) and isinstance(data.get("files"), dict):
+            for file_data in data["files"].values():
+                if not isinstance(file_data, dict) or not isinstance(file_data.get("matches", []), list):
+                    raise ValueError("expected a list of matches for each file")
+                violations.extend(file_data.get("matches", []))
+        elif isinstance(data, dict) and isinstance(data.get("matches"), list):
+            violations = data["matches"]
+        else:
+            raise ValueError("unrecognized result format")
+        if any(not isinstance(v, dict) for v in violations):
+            raise ValueError("expected violation objects")
+        if result.returncode == 2 and not violations:
+            raise ValueError("ansible-lint reported violations without returning any results")
+    except ValueError as exc:
+        log.error("Cannot read ansible-lint results: %s", exc)
+        if result.stderr:
+            log.error("ansible-lint stderr: %s", result.stderr.strip())
+        return [], 2
 
     out = []
     fixed = []
@@ -462,21 +483,16 @@ def run_ansible_lint(**kwargs) -> tuple[list[dict], int]:
     if fix:
         return fixed, 0
 
-    if result.returncode != 0:
-        rc_code = result.returncode
-        logging.getLogger(__name__).error("ansible-lint exited with code %s", rc_code)
-        if result.stderr:
-            logging.getLogger(__name__).error("ansible-lint stderr: %s", result.stderr.strip())
-    elif out:
+    if result.returncode == 2 or any(v["violation_type"] == "Error" for v in out):
         rc_code = 1
-        logging.getLogger(__name__).error("ansible-lint violations seen")
+        log.error("ansible-lint violations seen")
     else:
         rc_code = 0
 
     return out, rc_code
 
 
-def run_copyright_check(repo_root: Path, files: list[Path], fix: bool = False) -> tuple[list[dict], int]:
+def run_copyright_check(*, repo_root: Path, files: list[Path], fix: bool = False) -> tuple[list[dict], int]:
     """
     Check for the complete leading Broadcom copyright and license header.
     If fix=True, repair the header while preserving preambles and third-party notices.
@@ -649,7 +665,7 @@ def sort_key(row: dict) -> tuple[int, str, str]:
     return (order, str(row.get("file_path", "")), str(row.get("line", "")))
 
 
-def format_table(rows: list[dict]) -> list[str]:
+def format_table(*, rows: list[dict]) -> list[str]:
     """Format rows as a markdown-style table. Returns list of lines."""
     if not rows:
         return []
@@ -669,6 +685,7 @@ def format_table(rows: list[dict]) -> list[str]:
 
 
 def generate_fix_summary_log(
+    *,
     ruff_fixes: list[dict],
     ansible_fixes: list[dict],
     copyright_fixes: list[dict],
@@ -720,13 +737,14 @@ def generate_fix_summary_log(
 
     log_messages.append(
         f"\n{_YELLOW}Note: Files were automatically modified. Please review the "
-        f"changes and re-run code_sanity.py to ensure no further violations remain.{_RESET}"
+        f"changes and re-run lint_header_check.py to ensure no further violations remain.{_RESET}"
     )
 
     return "\n".join(log_messages)
 
 
 def generate_summary_log(
+    *,
     ruff_violations: list[dict],
     ruff_rc: int,
     run_ruff_check: bool,
@@ -807,14 +825,14 @@ def generate_summary_log(
         else:
             log_messages.append("\n  (Only warnings found, suppressed from output)")
 
-    log_messages.append("\nCODE SANITY SUMMARY")
+    log_messages.append("\nLINT AND HEADER CHECK SUMMARY")
 
     summary_rows = []
     if run_ruff_check:
         status = "FAIL" if ruff_errs > 0 or ruff_rc not in (0, 1) else "PASS"
         summary_rows.append({"Check": "Ruff", "Status": status, "Errors": str(ruff_errs), "Warnings": str(ruff_warns)})
     if run_ansible_lint_check:
-        status = "FAIL" if ansible_errs > 0 or ansible_rc not in (0, 1) else "PASS"
+        status = "FAIL" if ansible_errs > 0 or ansible_rc != 0 else "PASS"
         summary_rows.append(
             {"Check": "Ansible-lint", "Status": status, "Errors": str(ansible_errs), "Warnings": str(ansible_warns)}
         )
@@ -855,7 +873,7 @@ def generate_summary_log(
 
     linter_failed = ruff_rc not in (0, 1) or ansible_rc not in (0, 1) or copyright_rc not in (0, 1)
     has_error_violations = any(v.get("violation_type") == "Error" for v in all_violations)
-    exit_code = 2 if linter_failed else (1 if has_error_violations else 0)
+    exit_code = 2 if linter_failed else (1 if has_error_violations or ansible_rc == 1 else 0)
 
     if exit_code == 0:
         log_messages.append("\nNo violations found")
@@ -867,13 +885,13 @@ def generate_summary_log(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Run linter checks on a path",
+        description="Run lint and copyright/license header checks",
         epilog="Examples:\n"
         "  %(prog)s                                    validate entire repository\n"
-        "  %(prog)s --path ~/repos/ansible_int/module_compatibility.yml   validate one file\n"
+        "  %(prog)s --path playbooks/tasks/switch_initial_config.yml   validate one file\n"
         "  %(prog)s --path path/to/dir --fix            auto-fix then report\n"
         "  %(prog)s -h                                 show this help",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        formatter_class=HelpFormatter,
     )
     parser.add_argument(
         "--path",
@@ -881,7 +899,8 @@ def main() -> int:
         default=None,
         nargs="+",
         metavar="PATH",
-        help="File or directory to check (default: entire repository). Can specify multiple paths.",
+        help="File or directory to check. Omit to validate the entire repository. "
+        "Can specify multiple paths. Ansible Lint skips YAML files under changelogs/.",
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument(
@@ -895,7 +914,7 @@ def main() -> int:
         nargs="+",
         choices=["ruff", "ansible-lint", "copyright", "all"],
         default=["all"],
-        help="Which sanity checks to run (default: all). Can specify multiple.",
+        help="Which sanity checks to run. Can specify multiple.",
     )
     parser.add_argument(
         "--suppress-warnings",
@@ -909,16 +928,16 @@ def main() -> int:
     run_copyright = "all" in args.checks or "copyright" in args.checks
 
     log = setup_logging(verbose=args.verbose)
-    dependency_paths = check_dependencies(log)
+    check_dependencies(log=log)
 
-    # Find repository root: from script location, or from cwd if script is not in a repo
+    # Collection copies used by ansible-test do not need Git metadata.
     script_dir = Path(__file__).resolve().parent
-    repo_root = find_repo_root(script_dir)
-    if not (repo_root / ".git").exists():
-        repo_root = find_repo_root(Path.cwd())
-    if not (repo_root / ".git").exists():
-        log.error("No Ansible collection repository found.")
-        log.error("Run this script from inside a repo, or use the copy in the repo (e.g. tests/sanity/code_sanity.py)")
+    repo_root = find_repo_root(start=script_dir)
+    if not (repo_root / "galaxy.yml").is_file():
+        repo_root = find_repo_root(start=Path.cwd())
+    if not (repo_root / "galaxy.yml").is_file():
+        log.error("No Ansible collection found (galaxy.yml is required).")
+        log.error("Run this script from the collection root, or use its tests/sanity/lint_header_check.py copy.")
         parser.print_usage(sys.stderr)
         return 2
 
@@ -928,7 +947,8 @@ def main() -> int:
 
     if args.path is None:
         log.info("No path specified. Validating entire collection: %s", repo_root.resolve())
-        py_files, yaml_files = collect_files(repo_root, repo_root)
+        py_files, yaml_files = collect_files(path=repo_root, repo_root=repo_root)
+        ansible_files = None
     else:
         for path_str in args.path:
             path_str = Path(path_str).expanduser()
@@ -940,17 +960,20 @@ def main() -> int:
                 continue
 
             log.info("Validating: %s", path_arg)
-            p_files, y_files = collect_files(path_arg, repo_root)
+            p_files, y_files = collect_files(path=path_arg, repo_root=repo_root)
             py_files.extend(p_files)
             yaml_files.extend(y_files)
 
         # Deduplicate files
         py_files = list(set(py_files))
         yaml_files = list(set(yaml_files))
+        ansible_files = [path for path in yaml_files if not path.is_relative_to("changelogs")]
 
-    if not py_files and not yaml_files:
+    if not py_files and not yaml_files and not (args.path is None and run_ansible_lint_check):
         log.warning("No Python or YAML files found under the given path(s) (paths must be under repository root)")
         return 0
+
+    ansible_scope = "repository discovery" if ansible_files is None else f"{len(ansible_files)} file(s)"
 
     # When --fix: run fix pass first (modifies files), then run lint without fix to get summary
     ruff_fixes = []
@@ -970,16 +993,12 @@ def main() -> int:
                 verbose=args.verbose,
             )
             log.info("Ruff (fix pass) finished (%.1fs)", time.monotonic() - _start)
-        if yaml_files and run_ansible_lint_check:
-            log.info("Running Ansible-lint (fix pass) on %s file(s)", len(yaml_files))
-            files = list()
-            for p in yaml_files:
-                files.append(str(p))
-            log.debug("Ansible-lint sanity on:\n%s", pformat(files, indent=4))
+        if run_ansible_lint_check and (ansible_files is None or ansible_files):
+            log.info("Running Ansible-lint (fix pass): %s", ansible_scope)
             _start = time.monotonic()
             ansible_fixes, _unused = run_ansible_lint(
                 repo=repo_root,
-                files=yaml_files,
+                files=ansible_files,
                 fix=True,
                 verbose=args.verbose,
             )
@@ -990,7 +1009,7 @@ def main() -> int:
             if all_files:
                 log.info("Running Copyright check (fix pass) on %s file(s)", len(all_files))
                 _start = time.monotonic()
-                copyright_fixes, _unused = run_copyright_check(repo_root, all_files, fix=True)
+                copyright_fixes, _unused = run_copyright_check(repo_root=repo_root, files=all_files, fix=True)
                 log.info("Copyright check (fix pass) finished (%.1fs)", time.monotonic() - _start)
 
     if py_files and run_ruff_check:
@@ -998,24 +1017,18 @@ def main() -> int:
         files = list()
         for p in py_files:
             files.append(str(p))
-        log.debug("Ruff sanity on:\n%s", pformat(files, indent=4))
+        log.debug("Ruff checks on:\n%s", pformat(files, indent=4))
         _start = time.monotonic()
-        ruff_violations, ruff_rc = run_ruff(
-            repo=repo_root, files=py_files, fix=False, verbose=args.verbose, python=dependency_paths["python"]
-        )
+        ruff_violations, ruff_rc = run_ruff(repo=repo_root, files=py_files, fix=False, verbose=args.verbose)
         log.info("Ruff finished (%.1fs)", time.monotonic() - _start)
     else:
         ruff_violations, ruff_rc = [], 0
 
-    if yaml_files and run_ansible_lint_check:
-        files = list()
-        for p in yaml_files:
-            files.append(str(p))
-        log.info("Running Ansible-lint on %s file(s)", len(yaml_files))
-        log.debug("Ansible-lint on:\n%s", pformat(files, indent=4))
+    if run_ansible_lint_check and (ansible_files is None or ansible_files):
+        log.info("Running Ansible-lint: %s", ansible_scope)
         _start = time.monotonic()
         ansible_violations, ansible_rc = run_ansible_lint(
-            repo=repo_root, files=yaml_files, fix=False, verbose=args.verbose, python=dependency_paths["python"]
+            repo=repo_root, files=ansible_files, fix=False, verbose=args.verbose
         )
         log.info("Ansible-lint finished (%.1fs)", time.monotonic() - _start)
     else:
@@ -1029,7 +1042,7 @@ def main() -> int:
         if all_files:
             log.info("Running Copyright check on %s file(s)", len(all_files))
             _start = time.monotonic()
-            copyright_violations, copyright_rc = run_copyright_check(repo_root, all_files)
+            copyright_violations, copyright_rc = run_copyright_check(repo_root=repo_root, files=all_files)
             log.info("Copyright check finished (%.1fs)", time.monotonic() - _start)
         else:
             copyright_violations, copyright_rc = [], 0
@@ -1099,7 +1112,7 @@ def main() -> int:
 
         linter_failed = ruff_rc not in (0, 1) or ansible_rc not in (0, 1) or copyright_rc not in (0, 1)
         has_error_violations = any(v.get("violation_type") == "Error" for v in all_remaining)
-        return 2 if linter_failed else (1 if has_error_violations else 0)
+        return 2 if linter_failed else (1 if has_error_violations or ansible_rc == 1 else 0)
 
     summary_log, exit_code = generate_summary_log(
         ruff_violations=ruff_violations,

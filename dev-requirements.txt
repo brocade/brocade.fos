@@ -6,6 +6,7 @@
 # Linting
 ruff==0.15.6
 ansible-lint==26.4.0
+shellcheck-py==0.11.0.1
 pytest>=7.4
 antsibull-changelog>=0.35.1
 
