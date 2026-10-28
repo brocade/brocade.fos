@@ -3,6 +3,8 @@
 # GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
 # SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
+"""Module arguments, check mode, and zoning payloads."""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type

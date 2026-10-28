@@ -3,7 +3,7 @@
 # GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
 # SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
-"""Regression tests for the lint/header runner and header validation and repair."""
+"""Lint/header runner behavior and license-header repair."""
 
 import importlib.util
 import json

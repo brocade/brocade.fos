@@ -67,9 +67,16 @@ TEST-NET blocks from RFC 5737.
 Activate the development environment, then run from the source checkout:
 
 ```bash
-# Run all check suites against your current working files.
+# Show check options, descriptions, and discovered unit test files.
+hacking/run_checks.sh --list
+
+# Run the default check suites against your current working files.
 hacking/run_checks.sh
 ```
+
+The list includes each unit test file and its purpose, plus commands for listing
+individual cases without running them or selecting one file in a prepared
+collection workspace.
 
 The script:
 
@@ -86,6 +93,22 @@ repeating the others. Each retry uses a fresh workspace with your current edits.
 Resolve failures before submitting. Edit the original checkout and rerun the
 script after changes; each run creates a new workspace and keeps its results.
 
+### Run One Unit Test File
+
+Use a file path shown by `hacking/run_checks.sh --list`, including any
+subdirectories. From the source checkout:
+
+```bash
+# Prepare a fresh workspace in the collection layout required by ansible-test.
+cd "$(hacking/prepare_ansible_test.sh)"
+
+# Run all cases in one file; replace this example path with the selected file.
+ansible-test units tests/unit/test_lint_header_check.py --venv --requirements
+
+# Return to the original source checkout.
+cd -
+```
+
 ### Optional Builds
 
 ```bash
@@ -101,10 +124,13 @@ Use `hacking/run_checks.sh --help` for options.
 
 - **Unit cases:** add `test_*.py` files under `tests/unit/`. Edit or remove test
   functions, fixtures, and parameter cases there. The unit suite discovers them
-  automatically; no runner change is needed.
+  automatically; no runner change is needed. Add a one-line module docstring at
+  the top of each file to describe it in `--list`.
 - **Suites and integration targets:** add, edit, or remove `run_check` calls in
   the `Default suites` block of `hacking/run_checks.sh`. Give each suite a unique
-  log name (also used by `--only`) and keep the shared `ansible_test_options` flags.
+  log name (selected by `--only`) followed by its description for `--list`.
+  Keep the shared `ansible_test_options` flags. For optional suites, include
+  `list_checks` in the condition so they also appear in the list.
   For a new integration target, add its files and `aliases` under
   `tests/integration/targets/<target>/`.
   Edit or remove integration cases in that target's `runme.sh` or `tasks/` files;
@@ -117,7 +143,8 @@ Example addition to the runner:
 
 ```bash
 # Include a new integration target in the default run.
-run_check extra_target ansible-test integration extra_target "${ansible_test_options[@]}"
+run_check extra_target 'Describe the new integration checks.' \
+    ansible-test integration extra_target "${ansible_test_options[@]}"
 ```
 
 ## Changelog
