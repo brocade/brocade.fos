@@ -118,7 +118,7 @@ new_attributes:
     returned: when the switch login succeeds
     type: dict
 diff_attributes:
-    description: Requested attributes that differ from the switch and are updated.
+    description: Requested attributes that differ from the switch. See the notes for attributes that are not sent.
     returned: when the switch login succeeds
     type: dict
 messages:
