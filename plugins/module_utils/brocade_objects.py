@@ -2108,11 +2108,11 @@ def operation_helper(
             if ret_code != 0:
                 exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
 
+            to_human_operation(op_name, in_name, resp["Response"])
+
+            result["operation_resp"] = resp["Response"]
+
         result["changed"] = True
-
-        to_human_operation(op_name, in_name, resp["Response"])
-
-        result["operation_resp"] = resp["Response"]
     except Exception:
         logout(fos_ip_addr, https, auth, result, timeout)
         raise

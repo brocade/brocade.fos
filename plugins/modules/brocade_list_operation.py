@@ -13,11 +13,19 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 
 module: brocade_list_operation
-short_description: Brocade Fibre Channel operation with the container input
+short_description: Brocade IPS operations with explicit actions
 version_added: "1.3.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
--   Perform specified operation.
+-   Submit IPS operations to the switch with the entries exactly as given, selected by C(module_name).
+-   Supported C(module_name) values are C(vrf), C(vlan), C(interface), C(staticArp), C(staticRoute),
+    and C(lag) for IP storage (IPS) on a logical switch with IP storage enabled, and C(configuration)
+    for traffic class configuration.
+-   Each entry sets its operation with C(action), for example C(create) or C(delete). Unlike
+    C(brocade.fos.brocade_operation), the module does not compare the entries with the switch, so
+    the task always reports a change.
+-   The module returns once FOS accepts the operation. To wait for it to complete, poll
+    C(brocade.fos.brocade_operation_show_status) with the returned C(message_id).
 
 options:
     credential:
@@ -51,7 +59,7 @@ options:
         required: true
     vfid:
         description:
-        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   Fabric ID of the logical switch. Defaults to C(128) when omitted.
         type: int
     throttle:
         description:
@@ -63,13 +71,14 @@ options:
         type: int
     module_name:
         description:
-        -   YANG module name. Hyphens and underscores can be used interchangeably. If the YANG module
-            name is xy-z, either xy-z or xy_z is acceptable.
+        -   Operation to run. One of C(vrf), C(vlan), C(interface), C(staticArp), C(staticRoute), C(lag),
+            or C(configuration). Values are case-sensitive.
         required: true
         type: str
     entries:
         description:
-        -   Operation parameters.
+        -   Operation entries. Each entry contains C(action) and the YANG leaf names of the operation,
+            for example C(vrfID) and C(action) for C(vrf).
         type: list
         required: true
         elements: raw
@@ -87,23 +96,42 @@ EXAMPLES = r"""
       fos_password: user_password
       https: "false"
   tasks:
-    - name: Perform operation
+    - name: Create IP storage VRFs
       brocade.fos.brocade_list_operation:
         credential: '{{ credential }}'
         module_name: vrf
-        vfid: -1
+        vfid: 5
         entries:
           - vrfID: 28
-            action: delete
+            action: create
+          - vrfID: 29
+            action: create
+      register: result
+
+    - name: Wait for the operation to complete
+      brocade.fos.brocade_operation_show_status:
+        credential: '{{ credential }}'
+        vfid: 5
+        show_status:
+          message_id: '{{ result.operation_resp.show_status.message_id }}'
+      register: status_result
+      until: status_result.operation_resp.show_status.status in ["done", "delivered"]
+      retries: 100
+      delay: 10
 """
 
 
 RETURN = r"""
 
-msg:
-    description: Success message.
-    returned: success
-    type: str
+input:
+    description: Entries submitted to the switch, with secrets removed.
+    returned: when the switch login succeeds
+    type: list
+    elements: dict
+operation_resp:
+    description: FOS response to the operation, including C(show_status.message_id) for status polling.
+    returned: when the operation is submitted
+    type: dict
 
 """
 
