@@ -6,6 +6,8 @@
 sections:
   - title: Guides
     toctree:
+      - using_vault
+      - playbook_authoring
       - versioning
       - contributing
       - changelog

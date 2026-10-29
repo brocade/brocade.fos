@@ -118,7 +118,9 @@ hacking/run_checks.sh --build-collection --build-docs
 
 Use either flag on its own when needed. Installation, artifacts, and generated
 HTML stay in the test workspace; the script prints the documentation path.
-Use `hacking/run_checks.sh --help` for options.
+Use `hacking/run_checks.sh --help` for options. To build the documentation
+directly from the source checkout instead, follow
+[docs/documentation.rst](https://github.com/brocade/brocade.fos/blob/main/docs/documentation.rst).
 
 ### Adding, Editing, or Removing Tests
 

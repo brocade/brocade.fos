@@ -29,6 +29,7 @@ HTTP = "http://"
 HTTPS = "https://"
 SELF_SIGNED = "self"
 HTTPS_ENABLED = "true"
+HTTPS_DISABLED = "false"
 
 
 ERROR_GENERIC = -1
@@ -46,6 +47,8 @@ def full_url_get(is_https, fos_ip_addr, path):
         return HTTPS + fos_ip_addr + str_to_yang(path), True
     elif is_https.lower() == SELF_SIGNED:
         return HTTPS + fos_ip_addr + str_to_yang(path), False
+    elif is_https.lower() == HTTPS_DISABLED:
+        return HTTP + fos_ip_addr + str_to_yang(path), False
     else:
         # unrecognized https value - fall back to HTTP but warn, since this
         # silently downgrades the connection from what the caller may expect

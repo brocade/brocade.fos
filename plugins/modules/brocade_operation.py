@@ -17,7 +17,15 @@ short_description: Brocade IPS operations
 version_added: "2.0.0"
 author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
--   Perform IPS operations for list of objects based on module name and list name provided.
+-   Run IPS operations that take a list of entries, selected by C(module_name).
+-   Supported C(module_name) values are C(vrf), C(vlan), C(interface), C(staticArp), C(staticRoute),
+    and C(lag) for IP storage (IPS) on a logical switch with IP storage enabled, and C(configuration)
+    for traffic class configuration.
+-   The module compares C(entries) with the current list on the switch and submits each change as a
+    FOS operation, waiting up to about 16 minutes for each operation to complete.
+-   C(staticArp), C(staticRoute), and C(lag) entries are updated by deleting and recreating them.
+-   VRF C(0) and the system traffic classes C(sysTcDefault) and C(sysTcAclDeny) are never deleted.
+    Entries that change C(sysTcDefault) or C(sysTcAclDeny) cause the task to fail.
 
 options:
     credential:
@@ -51,7 +59,7 @@ options:
         required: true
     vfid:
         description:
-        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   Fabric ID of the logical switch to configure. Defaults to C(128) when omitted.
         type: int
     throttle:
         description:
@@ -63,23 +71,23 @@ options:
         type: int
     module_name:
         description:
-        -   YANG module name. Hyphens and underscores can be used interchangeably. If the YANG module
-            name is xy-z, either xy-z or xy_z is acceptable.
+        -   List to manage. Values are case-sensitive.
         required: true
         type: str
+        choices: [vrf, vlan, interface, staticArp, staticRoute, lag, configuration]
     entries:
         description:
-        -   List of objects. The name of each attribute within each entry should match the YANG name
-            except that hyphens are replaced with underscores. Using hyphens in the name may result in
-            erroneous behavior based on Ansible parsing.
+        -   Desired entries for the selected list. Attribute names match the YANG leaf names of that
+            list, for example C(vrfID) and C(dhcpEnabled) for C(vrf).
         required: true
         type: list
         elements: raw
     all_entries:
         description:
-        -   Whether entries specifies the complete desired list of objects. When true, the module adds,
-            updates, and deletes objects to match entries. When false, the module adds or updates the
-            specified objects and preserves objects omitted from entries.
+        -   Whether C(entries) specifies the complete desired list. When true, the module adds, updates,
+            and deletes entries to match C(entries). When false, the module adds or updates the specified
+            entries and preserves entries omitted from C(entries).
+        -   Defaults to true when omitted, so entries not listed are deleted.
         type: bool
 """
 
@@ -95,25 +103,46 @@ EXAMPLES = r"""
       fos_password: user_password
       https: "false"
   tasks:
-    - name: List object example
-      brocade.fos.brocade_list_obj:
+    - name: Configure IP storage VRFs
+      brocade.fos.brocade_operation:
         credential: '{{ credential }}'
-        vfid: -1
-        module_name: brocade-snmp
-        list_name: v3-account
+        vfid: 9
+        module_name: vrf
         all_entries: false
         entries:
-          - index: 1
-            community_name: new name
+          - vrfID: 28
+          - vrfID: 33
+            dhcpEnabled: true
+            dhcpServer: 198.51.100.100
 """
 
 
 RETURN = r"""
 
-msg:
-    description: Success message.
-    returned: success
-    type: str
+current_entries:
+    description: Entries read from the switch before changes, excluding those deleted and recreated.
+    returned: when the switch list is read
+    type: list
+    elements: dict
+add_entries:
+    description: Entries submitted for creation.
+    returned: when the switch list is read
+    type: list
+    elements: dict
+diff_entries:
+    description: Changes submitted for existing entries.
+    returned: when the switch list is read
+    type: list
+    elements: dict
+delete_entries:
+    description: Entries not in C(entries). They are deleted only when C(all_entries) is true.
+    returned: when the switch list is read
+    type: list
+    elements: dict
+response:
+    description: Raw REST response for the current list, or an error message.
+    returned: when the switch list is read
+    type: raw
 
 """
 
@@ -146,7 +175,11 @@ def main():
         vfid=dict(required=False, type="int"),
         throttle=dict(required=False, type="int"),
         timeout=dict(required=False, type="int"),
-        module_name=dict(required=True, type="str"),
+        module_name=dict(
+            required=True,
+            type="str",
+            choices=["vrf", "vlan", "interface", "staticArp", "staticRoute", "lag", "configuration"],
+        ),
         entries=dict(required=True, type="list", elements="raw"),
         all_entries=dict(required=False, type="bool"),
     )

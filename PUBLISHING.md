@@ -24,14 +24,18 @@ Before building:
    choosing the version number by its release criteria.
 2. Set `version:` in `galaxy.yml` to that version. Neither server accepts a
    version that already exists.
-3. Remove duplicate pending fragments in `changelogs/fragments/`.
-4. Validate the fragments and incorporate them into the release:
+3. If `python_requires` in `tests/config.yml` changed, or the collection now
+   needs external Python packages, update the **Requirements** section of
+   [README.md](README.md) to match. Red Hat certification requires the README
+   to state the minimum Python version and any external dependencies.
+4. Remove duplicate pending fragments in `changelogs/fragments/`.
+5. Validate the fragments and incorporate them into the release:
 
    ```bash
    hacking/release_changelog.sh
    ```
 
-5. Review the version, YAML history, generated notes, and consumed fragments:
+6. Review the version, YAML history, generated notes, and consumed fragments:
 
    ```bash
    git diff -- galaxy.yml changelogs/ CHANGELOG.rst
@@ -42,9 +46,12 @@ Before building:
    Commit their deletions with `galaxy.yml`, `changelogs/changelog.yaml`, and
    `CHANGELOG.rst`. `antsibull-changelog generate` alone does not incorporate
    pending fragments.
-6. Validate the changes on a FOS switch using the supported FOS releases.
-7. Ensure the certification workflow passes on the PR.
-8. Merge the approved pull request into `main` before publishing the collection.
+7. Validate the changes on a FOS switch using the supported FOS releases.
+8. Ensure the certification workflow passes on the PR. It runs collection
+   build/import checks, production lint, and full sanity tests through Red
+   Hat's Partner Certification Checker. These checks do not exercise a live
+   switch, so step 7 is still required.
+9. Merge the approved pull request into `main` before publishing the collection.
 
 From the collection root (the directory containing `galaxy.yml`):
 
