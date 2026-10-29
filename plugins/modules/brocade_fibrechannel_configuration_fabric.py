@@ -63,14 +63,20 @@ options:
         type: int
     fabric:
         description:
-        -   List of fabric configuration attributes. Supports all writable attributes exposed by the BSN
-            REST API, with hyphens replaced by underscores.
+        -   Fabric configuration attributes to set. Supports the writable attributes of the
+            C(brocade-fibrechannel-configuration/fabric) REST container, with hyphens replaced by
+            underscores, for example C(insistent_domain_id_enabled), C(preserved_domain_id_mode_enabled),
+            C(principal_selection_enabled), and C(principal_priority).
+        -   Only the specified attributes are compared with the switch and updated.
         required: true
         type: dict
 notes:
--   Specifying either principal_selection_enabled and principal_priority may lead to failures.Both of them
-    need to be specified in the playbook. Examples are insistent_domain_id_enabled - indicate if insistent
-    domain id feature is enabled
+-   FOS accepts C(principal_priority) only while C(principal_selection_enabled) is true. When
+    C(principal_priority) is set without C(principal_selection_enabled), the module also sets
+    C(principal_selection_enabled) to true in the same request. Check mode does not show this change.
+-   When C(principal_selection_enabled) is set to false, C(principal_priority) is not sent, because FOS
+    rejects a priority change while disabling principal selection.
+-   The switch does not report C(principal_priority) while principal selection is disabled.
 """
 
 
@@ -92,7 +98,7 @@ EXAMPLES = r"""
         vfid: -1
         fabric:
           insistent_domain_id_enabled: true
-          preserved-domain-id-mode-enabled: true
+          preserved_domain_id_mode_enabled: true
           principal_selection_enabled: true
           principal_priority: '0x6'
     - name: Show fabric result
@@ -103,9 +109,25 @@ EXAMPLES = r"""
 
 RETURN = r"""
 
+current_attributes:
+    description: Fabric attributes read from the switch before any change.
+    returned: when the switch login succeeds
+    type: dict
+new_attributes:
+    description: Fabric attributes requested by the task.
+    returned: when the switch login succeeds
+    type: dict
+diff_attributes:
+    description: Requested attributes that differ from the switch and are updated.
+    returned: when the switch login succeeds
+    type: dict
+messages:
+    description: Status message for the fabric update.
+    returned: when fabric attributes are updated
+    type: str
 msg:
-    description: Success message.
-    returned: success
+    description: Error message.
+    returned: failure
     type: str
 
 """
