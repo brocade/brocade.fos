@@ -18,12 +18,47 @@ from pathlib import Path
 
 from ansible.errors import AnsibleActionFail
 from ansible.plugins.action import ActionBase
-from ansible_collections.brocade.fos.plugins.module_utils.brocade_versioning import (
-    newest_fos_versions,
-    parse_release_history,
-)
 
 VERSIONING_FILE = Path(__file__).resolve().parents[2] / "versioning.md"
+
+
+def _split_list(cell):
+    return [item.strip() for item in cell.split(",") if item.strip()]
+
+
+def parse_release_history(contents):
+    """
+    Return the release history table in versioning.md as a dict keyed by
+    brocade.fos release, newest first.
+    """
+    releases = {}
+    for line in contents.splitlines():
+        if not line.startswith("|"):
+            continue
+        parts = [part.strip() for part in line.strip().strip("|").split("|")]
+        if len(parts) != 6:
+            continue
+        brocade_fos, ga_date, fos, ansible_core, python, notes = parts
+        if brocade_fos == "brocade.fos" or set(brocade_fos) <= set("-: "):
+            continue  # header and separator rows
+        tested_with = [f"ansible-core: {ver}" for ver in _split_list(ansible_core)]
+        tested_with += [f"python: {ver}" for ver in _split_list(python)]
+        releases[brocade_fos] = {
+            "ga_date": ga_date,
+            "fos_versions": [{"version": ver, "tested_with": tested_with} for ver in _split_list(fos)],
+            "notes": notes,
+        }
+    return releases
+
+
+def newest_fos_versions(releases):
+    """
+    Return the FOS versions tested with the newest release.
+    """
+    if not releases:
+        return []
+    newest = next(iter(releases.values()))
+    return [fos["version"] for fos in newest["fos_versions"]]
 
 
 def load_supported_fos_versions(path=VERSIONING_FILE):

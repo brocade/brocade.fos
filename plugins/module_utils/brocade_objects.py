@@ -7,10 +7,8 @@
 from __future__ import absolute_import, division, print_function
 
 import json
-import os
 import re
 import time
-from pathlib import Path
 
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_access_gateway import (
     to_fos_access_gateway_policy,
@@ -1611,130 +1609,19 @@ def list_delete_helper(
     module.exit_json(**result)
 
 
-def _split_list(cell):
-    return [item.strip() for item in cell.split(",") if item.strip()]
-
-
-def _read_file(path, result, module):
-    if not Path(path).exists():
-        result["failed"] = True
-        result["response"] = f"{path} does not exist. Set 'BROCADE_VERSION_PATH' environment variable"
-        module.exit_json(**result)
-    with Path(path).open("r") as fp:
-        contents = fp.read()
-
-    # Release history is a Markdown table with one row per release, newest first.
-    releases = {}
-    for line in contents.splitlines():
-        if not line.startswith("|"):
-            continue
-        parts = [part.strip() for part in line.strip().strip("|").split("|")]
-        if len(parts) != 6:
-            continue
-        brocade_fos, ga_date, fos, ansible_core, python, notes = parts
-        if brocade_fos == "brocade.fos" or set(brocade_fos) <= set("-: "):
-            continue  # header and separator rows
-        tested_with = [f"ansible-core: {ver}" for ver in _split_list(ansible_core)]
-        tested_with += [f"python: {ver}" for ver in _split_list(python)]
-        releases[brocade_fos] = {
-            "ga_date": ga_date,
-            "fos_versions": [{"version": ver, "tested_with": tested_with} for ver in _split_list(fos)],
-            "notes": notes,
-        }
-    return releases
-
-
-def _fos_module_defined(content, result):
-    is_mod_utils_defined = bool()
-    is_lib_defined = bool()
-    filename = "versioning.md"
-
-    for line in content:
-        if not is_mod_utils_defined and re.search(r"module_utils", line):
-            directory = line.split()[-1].strip().strip('"')
-            if (Path(directory).parent / filename).exists():
-                is_mod_utils_defined = True
-
-        if not is_lib_defined and re.search(r"library", line):
-            directory = line.split()[-1].strip().strip('"')
-            if (Path(directory).parent / filename).exists():
-                is_lib_defined = True
-
-        if is_mod_utils_defined and is_lib_defined:
-            directory = line.split()[-1].strip().strip('"')
-            if (Path(directory).parent / filename).exists():
-                result["versionFilePath"] = str(Path(directory).parent / filename)
-            break
-
-    return is_mod_utils_defined and is_lib_defined
-
-
-def module_compatibility_helper(module, fos_ip_addr, fos_user_name, fos_password, https, throttle, result, timeout):
+def module_compatibility_helper(
+    module, fos_ip_addr, fos_user_name, fos_password, https, throttle, supported_versions, result, timeout
+):
     ret_code, auth, fos_version = login(fos_ip_addr, fos_user_name, fos_password, https, throttle, result, timeout)
     if ret_code != 0:
         module.exit_json(**result)
 
-    result["failed"] = True
-    result["response"] = "Module(s) are not compatible with the given switch"
-    fcontent = str()
-    filename = "versioning.md"
-    if Path(filename).exists():
-        fcontent = _read_file(filename, result, module)
-    elif os.getenv("BROCADE_VERSION_PATH"):  # BROCADE_VERSION_PATH defined
-        if not Path(os.getenv("BROCADE_VERSION_PATH")).exists():
-            result["failed"] = True
-            result["response"] = f"{os.getenv('BROCADE_VERSION_PATH')} must point to {filename}"
-            exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-        elif Path(os.getenv("BROCADE_VERSION_PATH")).name == filename:
-            fcontent = _read_file(os.getenv("BROCADE_VERSION_PATH"), result, module)
-        elif (Path(os.getenv("BROCADE_VERSION_PATH")).parent / filename).exists():
-            fcontent = _read_file(Path(os.getenv("BROCADE_VERSION_PATH")).parent / filename, result, module)
-        else:
-            result["failed"] = True
-            result["response"] = f"{os.getenv('BROCADE_VERSION_PATH')} must point to {filename}"
-            exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-    elif os.getenv("ANSIBLE_LIBRARY"):  # colection installed using ANSIBLE_LIBRARY
-        fcontent = _read_file(Path(os.getenv("ANSIBLE_LIBRARY")) / filename, result, module)
-    elif (Path.home() / ".ansible.cfg").exists():  # ~/.ansible.cfg present
-        fcontent = _read_file(Path.home() / ".ansible.cfg", result, module)
-        if not _fos_module_defined(fcontent, result):
-            if not Path("/etc/ansible/ansible.cfg").exists():  # /etc/ansible/ansible.cfg not present
-                # module_utils and library not present attempt reading global config
-                result["failed"] = True
-                result["response"] = "Define 'BROCADE_VERSION_PATH' environment variable"
-                exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-            else:
-                fcontent = _read_file("/etc/ansible/ansible.cfg", result, module)
-                if not _fos_module_defined(fcontent, result):
-                    result["failed"] = True
-                    result["response"] = "Define 'BROCADE_VERSION_PATH' environment variable"
-                    exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-        fcontent = _read_file(result["versionFilePath"], result, module)
-    elif Path("/etc/ansible/ansible.cfg").exists():  # /etc/ansible/ansible.cfg present
-        fcontent = _read_file("/etc/ansible/ansible.cfg", result, module)
-        if not _fos_module_defined(fcontent, result):
-            result["failed"] = True
-            result["response"] = "Define 'BROCADE_VERSION_PATH' environment variable"
-            exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-        fcontent = _read_file(result["versionFilePath"], result, module)
-    else:
-        result["failed"] = True
-        result["response"] = "Define 'BROCADE_VERSION_PATH' environment variable"
-        exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-
     try:
-        supported_versions = list()
-        for _collection_ver, collection_info in fcontent.items():
-            for fos_ver in collection_info["fos_versions"]:
-                supported_versions.append(fos_ver["version"])
-            break
-
         result["switchversionansible"] = supported_versions
         result["switchversion"] = fos_version
         # restrict version data to bare versions defined in versioning.md
-        normalized_fos_version = fos_version.split("_")[0] if "_" in fos_version else fos_version
+        normalized_fos_version = fos_version.split("_")[0]
         if normalized_fos_version in supported_versions:
-            result["failed"] = False
             result["response"] = "Module(s) are compatible with the given switch"
         else:
             result["failed"] = True
