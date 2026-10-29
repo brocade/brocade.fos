@@ -541,8 +541,6 @@ and [version history](https://github.com/brocade/brocade.fos/blob/main/versionin
 
 The collection metadata declares `GPL-3.0-or-later` and `BSD-2-Clause`.
 The license texts and existing file-specific notices are retained in this release.
-Certification CI uses Red Hat's permitted missing-GPL-header exception; this does
-not change the declared licenses or assign new file-specific licenses:
 
 - [GNU GPL version 3](https://github.com/brocade/brocade.fos/blob/main/LICENSE)
 - [BSD 2-Clause](https://github.com/brocade/brocade.fos/blob/main/LICENSES/BSD-2-Clause.txt)

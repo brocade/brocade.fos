@@ -42,9 +42,9 @@ Before building:
    Commit their deletions with `galaxy.yml`, `changelogs/changelog.yaml`, and
    `CHANGELOG.rst`. `antsibull-changelog generate` alone does not incorporate
    pending fragments.
-6. Confirm the certification workflow passed on the release PR and that
-   live-switch results are recorded in `versioning.md`.
-7. Merge the result before publishing.
+6. Validate the changes on a FOS switch using the supported FOS releases.
+7. Ensure the certification workflow passes on the PR.
+8. Merge the approved pull request into `main` before publishing the collection.
 
 From the collection root (the directory containing `galaxy.yml`):
 
