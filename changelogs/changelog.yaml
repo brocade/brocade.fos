@@ -15,7 +15,6 @@ releases:
       minor_changes:
       - Add the Red Hat Partner Certification Checker v6.0.0 workflow for pull requests and main-branch pushes, with a required-check aggregation job.
       - Update Automation Hub installation, support, release, and ordered manual-validation instructions.
-      - Use the Python version recorded in .python-version for release qualification and document certification targets for ansible-core 2.16 and 2.18.
       bugfixes:
       - brocade_operation_show_status, brocade_operation_firmwaredownload and other modules - preserve native JSON types from FOS REST responses instead of stringifying them, fixing numeric/boolean payload round-trips (for example show-status message-id polling failing with "unknown-attribute").
   2.2.0:

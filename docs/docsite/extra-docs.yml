@@ -3,12 +3,10 @@
 # GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
 # SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
+# Extra docsite pages must be RST files in docs/docsite/rst/. The Markdown
+# guides in docs/ are shown by Galaxy and Automation Hub and are linked from
+# the collection index through links.yml instead.
 sections:
   - title: Guides
     toctree:
-      - using_vault
-      - playbook_authoring
-      - versioning
-      - contributing
       - changelog
-      - licenses

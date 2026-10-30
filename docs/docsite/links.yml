@@ -1,0 +1,27 @@
+# Copyright 2019-2026 Broadcom. All rights reserved.
+# The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
+
+# Links shown on the collection index and plugin pages built by antsibull-docs.
+edit_on_github:
+  repository: brocade/brocade.fos
+  branch: main
+  path_prefix: ''
+
+extra_links:
+  - description: Using Ansible Vault
+    url: https://github.com/brocade/brocade.fos/blob/main/docs/using_vault.md
+  - description: Playbook authoring guide
+    url: https://github.com/brocade/brocade.fos/blob/main/docs/playbook_authoring.md
+  - description: Release history and tested FOS versions
+    url: https://github.com/brocade/brocade.fos/blob/main/versioning.md
+  - description: Contributing
+    url: https://github.com/brocade/brocade.fos/blob/main/CONTRIBUTING.md
+  - description: License
+    url: https://github.com/brocade/brocade.fos/blob/main/LICENSE
+
+communication:
+  mailing_lists:
+    - topic: Brocade Automation Team
+      url: mailto:Automation.BSN@broadcom.com

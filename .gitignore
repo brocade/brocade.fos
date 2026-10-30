@@ -65,8 +65,6 @@ MANIFEST
 ansible_collections
 
 ### Documentation ###
-docs/build/
-docs/rst/
 
 ### Dev tools ###
 .venv/

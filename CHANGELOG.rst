@@ -16,8 +16,8 @@ Major Changes
 -------------
 
 - Removed the SSH transport and ``paramiko`` dependency; all modules now use the FOS REST API only. Remove ``ssh_hostkeymust``, ``telnet_timeout``, and ``credit_recovery_mode`` from existing playbooks.
-- Switch FOS REST requests and responses from XML to JSON, removing the ``xmltodict`` dependency.
 - Replace hyphens with underscores in nested firmwaredownload, supportsave, and scalar-operation parameter names (for example, ``user-name`` becomes ``user_name``).
+- Switch FOS REST requests and responses from XML to JSON, removing the ``xmltodict`` dependency.
 
 Minor Changes
 -------------
