@@ -10,8 +10,6 @@ edit_on_github:
   path_prefix: ''
 
 extra_links:
-  - description: Using Ansible Vault
-    url: https://github.com/brocade/brocade.fos/blob/main/docs/using_vault.md
   - description: Playbook authoring guide
     url: https://github.com/brocade/brocade.fos/blob/main/docs/playbook_authoring.md
   - description: Release history and tested FOS versions

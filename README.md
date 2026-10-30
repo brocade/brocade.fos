@@ -101,29 +101,11 @@ ansible-galaxy collection install brocade.fos --upgrade
 
 ## Running playbooks
 
-Every module takes a `credential` dictionary with the switch login:
-
-```yaml
-credential:
-  fos_ip_addr: "198.51.100.1"
-  fos_user_name: "user_name"
-  fos_password: "user_password"
-  https: "true"
-```
-
-`https` is a quoted string:
-
-| Value     | Description                                                             |
-| --------- | ----------------------------------------------------------------------- |
-| `"true"`  | HTTPS with certificate validation                                       |
-| `"self"`  | HTTPS without certificate validation, allowing self-signed certificates |
-| `"false"` | Unencrypted HTTP; the password is sent in clear text                    |
-
-To keep `credential` encrypted, see
-[Using Ansible Vault](https://github.com/brocade/brocade.fos/blob/main/docs/using_vault.md).
-
-To write your own playbooks, see the [playbook authoring guide](https://github.com/brocade/brocade.fos/blob/main/docs/playbook_authoring.md)
-and the [example playbooks](https://github.com/brocade/brocade.fos/tree/main/playbooks/tasks).
+Use the collection to gather switch facts, configure switches, and manage zoning.
+See the [playbook authoring guide](https://github.com/brocade/brocade.fos/blob/main/docs/playbook_authoring.md)
+for credential setup and instructions for writing and running
+playbooks. Browse the [example playbooks](https://github.com/brocade/brocade.fos/tree/main/playbooks/tasks)
+for common tasks.
 
 ## Testing
 
