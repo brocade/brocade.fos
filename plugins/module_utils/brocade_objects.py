@@ -1,14 +1,14 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
 
 import json
-import os
 import re
 import time
-from pathlib import Path
 
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_access_gateway import (
     to_fos_access_gateway_policy,
@@ -192,7 +192,6 @@ def singleton_get(
     auth,
     vfid,
     result,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -212,19 +211,13 @@ def singleton_get(
         :rtype: dict
     """
     if module_name == "brocade_chassis" and obj_name == "chassis":
-        return chassis_get(
-            login, password, fos_ip_addr, fos_version, is_https, auth, vfid, result, ssh_hostkeymust, timeout
-        )
+        return chassis_get(fos_ip_addr, is_https, auth, vfid, result, timeout)
 
     if module_name == "brocade_fibrechannel_configuration" and obj_name == "fabric":
-        return fabric_get(
-            login, password, fos_ip_addr, fos_version, is_https, auth, vfid, result, ssh_hostkeymust, timeout
-        )
+        return fabric_get(fos_ip_addr, is_https, auth, vfid, result, timeout)
 
     if module_name == "brocade_fibrechannel_configuration" and obj_name == "port_configuration":
-        return port_configuration_get(
-            login, password, fos_ip_addr, fos_version, is_https, auth, vfid, result, ssh_hostkeymust, timeout
-        )
+        return port_configuration_get(fos_ip_addr, is_https, auth, vfid, result, timeout)
 
     # get is not support for these modules. Just return empty
     if module_name == "brocade_security" and obj_name == "security_certificate_action":
@@ -551,7 +544,6 @@ def list_get(
     auth,
     vfid,
     result,
-    ssh_hostkeymust,
     timeout,
 ):
     if (module_name == "brocade_fibrechannel_switch" or module_name == "switch") and list_name == "fibrechannel_switch":
@@ -570,7 +562,6 @@ def list_get(
         auth,
         vfid,
         result,
-        ssh_hostkeymust,
         timeout,
     )
 
@@ -595,7 +586,6 @@ def singleton_patch(
     vfid,
     result,
     new_attributes,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -618,46 +608,34 @@ def singleton_patch(
     """
     if module_name == "brocade_chassis" and obj_name == "chassis":
         return chassis_patch(
-            login,
-            password,
             fos_ip_addr,
-            fos_version,
             is_https,
             auth,
             vfid,
             result,
             new_attributes,
-            ssh_hostkeymust,
             timeout,
         )
 
     if module_name == "brocade_fibrechannel_configuration" and obj_name == "fabric":
         return fabric_patch(
-            login,
-            password,
             fos_ip_addr,
-            fos_version,
             is_https,
             auth,
             vfid,
             result,
             new_attributes,
-            ssh_hostkeymust,
             timeout,
         )
 
     if module_name == "brocade_fibrechannel_configuration" and obj_name == "port_configuration":
         return port_configuration_patch(
-            login,
-            password,
             fos_ip_addr,
-            fos_version,
             is_https,
             auth,
             vfid,
             result,
             new_attributes,
-            ssh_hostkeymust,
             timeout,
         )
 
@@ -699,7 +677,6 @@ def list_patch(
     vfid,
     result,
     entries,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -809,7 +786,6 @@ def list_post(
     vfid,
     result,
     entries,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -851,7 +827,6 @@ def list_delete(
     vfid,
     result,
     entries,
-    ssh_hostkeymust,
     timeout,
 ):
     """
@@ -887,7 +862,6 @@ def singleton_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -909,7 +883,6 @@ def singleton_helper(
 
     try:
         module_name = get_module_name(module_name)
-        result["ssh_hostkeymust"] = ssh_hostkeymust
 
         ret_code, response = singleton_get(
             fos_user_name,
@@ -922,7 +895,6 @@ def singleton_helper(
             auth,
             vfid,
             result,
-            ssh_hostkeymust,
             timeout,
         )
         if ret_code != 0:
@@ -979,7 +951,6 @@ def singleton_helper(
                             auth,
                             vfid,
                             result,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1011,7 +982,6 @@ def singleton_helper(
                                 vfid,
                                 result,
                                 policy,
-                                ssh_hostkeymust,
                                 timeout,
                             )
                             if ret_code != 0:
@@ -1033,7 +1003,6 @@ def singleton_helper(
                             vfid,
                             result,
                             policy,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1054,7 +1023,6 @@ def singleton_helper(
                             vfid,
                             result,
                             policy,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1078,7 +1046,6 @@ def singleton_helper(
                                 vfid,
                                 result,
                                 policy,
-                                ssh_hostkeymust,
                                 timeout,
                             )
                             if ret_code != 0:
@@ -1101,7 +1068,6 @@ def singleton_helper(
                             auth,
                             vfid,
                             result,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1133,7 +1099,6 @@ def singleton_helper(
                                 vfid,
                                 result,
                                 policy,
-                                ssh_hostkeymust,
                                 timeout,
                             )
                             if ret_code != 0:
@@ -1155,7 +1120,6 @@ def singleton_helper(
                             vfid,
                             result,
                             policy,
-                            ssh_hostkeymust,
                             timeout,
                         )
                         if ret_code != 0:
@@ -1179,7 +1143,6 @@ def singleton_helper(
                                 vfid,
                                 result,
                                 policy,
-                                ssh_hostkeymust,
                                 timeout,
                             )
                             if ret_code != 0:
@@ -1199,7 +1162,6 @@ def singleton_helper(
                         vfid,
                         result,
                         diff_attributes,
-                        ssh_hostkeymust,
                         timeout,
                     )
                     if ret_code != 0:
@@ -1232,7 +1194,6 @@ def list_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -1272,7 +1233,6 @@ def list_helper(
             auth,
             vfid,
             result,
-            ssh_hostkeymust,
             timeout,
         )
         if ret_code != 0:
@@ -1487,7 +1447,6 @@ def list_helper(
                     vfid,
                     result,
                     diff_entries,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1509,7 +1468,6 @@ def list_helper(
                     vfid,
                     result,
                     delete_entries,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1531,7 +1489,6 @@ def list_helper(
                     vfid,
                     result,
                     add_entries,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1553,7 +1510,6 @@ def list_delete_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -1589,7 +1545,6 @@ def list_delete_helper(
             auth,
             vfid,
             result,
-            ssh_hostkeymust,
             timeout,
         )
         if ret_code != 0:
@@ -1640,7 +1595,6 @@ def list_delete_helper(
                     vfid,
                     result,
                     delete_entries,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1655,191 +1609,19 @@ def list_delete_helper(
     module.exit_json(**result)
 
 
-def _read_file(path, result, module):
-    if not Path(path).exists():
-        result["failed"] = True
-        result["response"] = f"{path} does not exist. Set 'BROCADE_VERSION_PATH' environment variable"
-        module.exit_json(**result)
-    with Path(path).open("r") as fp:
-        contents = fp.read()
-    # Find the table section
-    table_pattern = r"\+===============.*?(?=\n\n|\Z)"
-    table_match = re.search(table_pattern, contents, re.DOTALL)
-
-    if not table_match:
-        return {}
-
-    table_text = table_match.group(0)
-    lines = table_text.split("\n")
-
-    result = {}
-    current_fos_ansible = None
-    current_ga_date = None
-    current_fos_versions = []
-    current_fos_version = None
-    current_tested_with = []
-    current_notes = None
-
-    for line in lines:
-        # Skip separator lines
-        if line.startswith("+===") or line.startswith("+---"):
-            continue
-
-        # Parse data lines
-        if line.startswith("|"):
-            # Split by pipe and clean up
-            parts = [p.strip() for p in line.split("|")[1:-1]]  # Remove empty first/last
-
-            if len(parts) != 5:
-                continue
-
-            fos_ansible, ga_date, fos, tested_with, notes = parts
-
-            # New brocade.fos version entry
-            if fos_ansible and fos_ansible != "brocade.fos":
-                # Save previous entry if exists
-                if current_fos_ansible:
-                    if current_fos_version:
-                        current_fos_versions.append(
-                            {"version": current_fos_version, "tested_with": current_tested_with}
-                        )
-
-                    result[current_fos_ansible] = {
-                        "ga_date": current_ga_date,
-                        "fos_versions": current_fos_versions,
-                        "notes": current_notes,
-                    }
-
-                # Start new entry
-                current_fos_ansible = fos_ansible
-                current_ga_date = ga_date
-                current_fos_versions = []
-                current_fos_version = None
-                current_tested_with = []
-                current_notes = notes
-
-            # Parse FOS version
-            if fos and current_fos_ansible:
-                # Save previous FOS version if exists
-                if current_fos_version:
-                    current_fos_versions.append({"version": current_fos_version, "tested_with": current_tested_with})
-
-                # Start new FOS version
-                current_fos_version = fos
-                current_tested_with = []
-
-                # Add tested_with if present on same line
-                if tested_with:
-                    current_tested_with.append(tested_with)
-
-            # Continue with tested_with on continuation lines
-            elif tested_with and current_fos_ansible:
-                current_tested_with.append(tested_with)
-
-    # Save last entry
-    if current_fos_ansible:
-        if current_fos_version:
-            current_fos_versions.append({"version": current_fos_version, "tested_with": current_tested_with})
-
-        result[current_fos_ansible] = {
-            "ga_date": current_ga_date,
-            "fos_versions": current_fos_versions,
-            "notes": current_notes,
-        }
-        return result
-
-
-def _fos_module_defined(content, result):
-    is_mod_utils_defined = bool()
-    is_lib_defined = bool()
-    filename = "versioning.rst"
-
-    for _ in content:
-        if not is_mod_utils_defined and re.search(r"module_utils", _):
-            directory = _.split()[-1].strip().strip('"')
-            if (Path(directory).parent / filename).exists():
-                is_mod_utils_defined = True
-
-        if not is_lib_defined and re.search(r"library", _):
-            directory = _.split()[-1].strip().strip('"')
-            if (Path(directory).parent / filename).exists():
-                is_lib_defined = True
-
-        if is_mod_utils_defined and is_lib_defined:
-            directory = _.split()[-1].strip().strip('"')
-            if (Path(directory).parent / filename).exists():
-                result["versionFilePath"] = str(Path(directory).parent / filename)
-            break
-
-    return is_mod_utils_defined and is_lib_defined
-
-
-def module_compatibility_helper(module, fos_ip_addr, fos_user_name, fos_password, https, throttle, result, timeout):
+def module_compatibility_helper(
+    module, fos_ip_addr, fos_user_name, fos_password, https, throttle, supported_versions, result, timeout
+):
     ret_code, auth, fos_version = login(fos_ip_addr, fos_user_name, fos_password, https, throttle, result, timeout)
     if ret_code != 0:
         module.exit_json(**result)
 
-    result["failed"] = True
-    result["response"] = "Module(s) are not compatible with the given switch"
-    fcontent = str()
-    filename = "versioning.rst"
-    if Path(filename).exists():
-        fcontent = _read_file(filename, result, module)
-    elif os.getenv("BROCADE_VERSION_PATH"):  # BROCADE_VERSION_PATH defined
-        if not Path(os.getenv("BROCADE_VERSION_PATH")).exists():
-            result["failed"] = True
-            result["response"] = f"{os.getenv('BROCADE_VERSION_PATH')} must point to {filename}"
-            exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-        elif Path(os.getenv("BROCADE_VERSION_PATH")).stem == filename:
-            fcontent = _read_file(os.getenv("BROCADE_VERSION_PATH"), result, module)
-        elif (Path(os.getenv("BROCADE_VERSION_PATH")).parent / filename).exists():
-            fcontent = _read_file(Path(os.getenv("BROCADE_VERSION_PATH")).parent / filename, result, module)
-        else:
-            result["failed"] = True
-            result["response"] = f"{os.getenv('BROCADE_VERSION_PATH')} must point to {filename}"
-            exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-    elif os.getenv("ANSIBLE_LIBRARY"):  # colection installed using ANSIBLE_LIBRARY
-        fcontent = _read_file(Path(os.getenv("ANSIBLE_LIBRARY")) / filename, result, module)
-    elif (Path.home() / ".ansible.cfg").exists():  # ~/.ansible.cfg present
-        fcontent = _read_file(Path.home() / ".ansible.cfg", result, module)
-        if not _fos_module_defined(fcontent, result):
-            if not Path("/etc/ansible/ansible.cfg").exists():  # /etc/ansible/ansible.cfg not present
-                # module_utils and library not present attempt reading global config
-                result["failed"] = True
-                result["response"] = "Define 'BROCADE_VERSION_PATH' environment variable"
-                exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-            else:
-                fcontent = _read_file("/etc/ansible/ansible.cfg", result, module)
-                if not _fos_module_defined(fcontent, result):
-                    result["failed"] = True
-                    result["response"] = "Define 'BROCADE_VERSION_PATH' environment variable"
-                    exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-        fcontent = _read_file(result["versionFilePath"], result, module)
-    elif Path("/etc/ansible/ansible.cfg").exists():  # /etc/ansible/ansible.cfg present
-        fcontent = _read_file("/etc/ansible/ansible.cfg", result, module)
-        if not _fos_module_defined(fcontent, result):
-            result["failed"] = True
-            result["response"] = "Define 'BROCADE_VERSION_PATH' environment variable"
-            exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-        fcontent = _read_file(result["versionFilePath"], result, module)
-    else:
-        result["failed"] = True
-        result["response"] = "Define 'BROCADE_VERSION_PATH' environment variable"
-        exit_after_login(fos_ip_addr, https, auth, result, module, timeout)
-
     try:
-        supported_versions = list()
-        for _collection_ver, collection_info in fcontent.items():
-            for fos_ver in collection_info["fos_versions"]:
-                supported_versions.append(fos_ver["version"])
-            break
-
         result["switchversionansible"] = supported_versions
         result["switchversion"] = fos_version
-        # restrict version data to bare versions defined in versioning.rst
-        normalized_fos_version = fos_version.split("_")[0] if "_" in fos_version else fos_version
+        # restrict version data to bare versions defined in versioning.md
+        normalized_fos_version = fos_version.split("_")[0]
         if normalized_fos_version in supported_versions:
-            result["failed"] = False
             result["response"] = "Module(s) are compatible with the given switch"
         else:
             result["failed"] = True
@@ -1860,7 +1642,6 @@ def list_operation(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -1915,7 +1696,6 @@ def list_operation(
                 vfid,
                 result,
                 op_entries,
-                ssh_hostkeymust,
                 timeout,
             )
             if ret_code != 0:
@@ -1946,7 +1726,6 @@ def list_operation(
                     vfid,
                     result,
                     attributes,
-                    ssh_hostkeymust,
                     timeout,
                 )
                 if ret_code != 0:
@@ -1966,7 +1745,6 @@ def list_operation_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     module_name,
@@ -2005,7 +1783,6 @@ def list_operation_helper(
         auth,
         vfid,
         result,
-        ssh_hostkeymust,
         timeout,
     )
     if ret_code != 0:
@@ -2055,7 +1832,6 @@ def list_operation_helper(
                 fos_user_name,
                 fos_password,
                 https,
-                ssh_hostkeymust,
                 throttle,
                 vfid,
                 module_name,
@@ -2224,7 +2000,6 @@ def list_operation_helper(
             fos_user_name,
             fos_password,
             https,
-            ssh_hostkeymust,
             throttle,
             vfid,
             module_name,
@@ -2244,7 +2019,6 @@ def list_operation_helper(
             fos_user_name,
             fos_password,
             https,
-            ssh_hostkeymust,
             throttle,
             vfid,
             module_name,
@@ -2264,7 +2038,6 @@ def list_operation_helper(
             fos_user_name,
             fos_password,
             https,
-            ssh_hostkeymust,
             throttle,
             vfid,
             module_name,
@@ -2287,7 +2060,6 @@ def operation_helper(
     fos_user_name,
     fos_password,
     https,
-    ssh_hostkeymust,
     throttle,
     vfid,
     op_name,
@@ -2331,7 +2103,6 @@ def operation_helper(
                 vfid,
                 result,
                 attributes_for_api,
-                ssh_hostkeymust,
                 timeout,
             )
             if ret_code != 0:
@@ -2383,7 +2154,6 @@ def operation_post(
     vfid,
     result,
     attributes,
-    ssh_hostkeymust,
     timeout,
 ):
     """

@@ -1,25 +1,57 @@
-# Publishing the `brocade.fos` Collection to Automation Hub
+# Publishing the `brocade.fos` Collection to Red Hat Automation Hub and Ansible Galaxy
 
 This document describes how to build and publish the `brocade.fos` Ansible collection to
-both a **Private (on-prem) Automation Hub** and the **Red Hat hosted Automation Hub**
+both **Ansible Galaxy** (galaxy.ansible.com) and the **Red Hat hosted Automation Hub**
 (console.redhat.com).
 
 ---
 
 ## 0. Prerequisites
 
-- `ansible-core` >= 2.15 installed (`ansible-galaxy --version`).
-- Network access to the target hub.
-- An API token for the target hub (see each section below for where to get it).
-- The `brocade` **namespace must already exist** on the target hub and your account must be
-  an owner of it. If it does not exist, an Automation Hub administrator must create it first,
-  otherwise the publish will be rejected.
-- The version in `galaxy.yml` must **not** already exist on the target hub — Automation Hub
-  refuses to overwrite an existing version. Bump `version:` in `galaxy.yml` for every release.
+- `ansible-core` installed at a version allowed by `requires_ansible` in
+  `meta/runtime.yml` (`ansible-galaxy --version`).
+- The `brocade` namespace must already exist on Galaxy and Automation Hub, and your account
+  must own it, or publication is rejected. On Galaxy, ownership is tied to your GitHub
+  account; on Automation Hub, Red Hat Partner Engineering or a hub administrator manages it.
 
 ---
 
-## 1. Build the collection artifact
+## 1. Set the release version and build the artifact
+
+Before building:
+
+1. Add the new release to the release history in [versioning.md](versioning.md),
+   choosing the version number by its release criteria.
+2. Set `version:` in `galaxy.yml` to that version. Neither server accepts a
+   version that already exists.
+3. If `python_requires` in `tests/config.yml` changed, or the collection now
+   needs external Python packages, update the **Requirements** section of
+   [README.md](README.md) to match. Red Hat certification requires the README
+   to state the minimum Python version and any external dependencies.
+4. Remove duplicate pending fragments in `changelogs/fragments/`.
+5. Validate the fragments and incorporate them into the release:
+
+   ```bash
+   hacking/release_changelog.sh
+   ```
+
+6. Review the version, YAML history, generated notes, and consumed fragments:
+
+   ```bash
+   git diff -- galaxy.yml changelogs/ CHANGELOG.rst
+   git diff --check HEAD
+   ```
+
+   `keep_fragments: false` in `changelogs/config.yaml` removes consumed fragments.
+   Commit their deletions with `galaxy.yml`, `changelogs/changelog.yaml`, and
+   `CHANGELOG.rst`. `antsibull-changelog generate` alone does not incorporate
+   pending fragments.
+7. Validate the changes on a FOS switch using the supported FOS releases.
+8. Ensure the certification workflow passes on the PR. It runs collection
+   build/import checks, production lint, and full sanity tests through Red
+   Hat's Partner Certification Checker. These checks do not exercise a live
+   switch, so step 7 is still required.
+9. Merge the approved pull request into `main` before publishing the collection.
 
 From the collection root (the directory containing `galaxy.yml`):
 
@@ -27,18 +59,22 @@ From the collection root (the directory containing `galaxy.yml`):
 ansible-galaxy collection build --force
 ```
 
-This produces a tarball named `brocade-fos-<version>.tar.gz` (e.g. `brocade-fos-2.2.0.tar.gz`).
-
-Verify it excludes dev/local files and contains the modules:
+This produces a tarball named `brocade-fos-<version>.tar.gz`. Verify the artifact
+before publishing: record its checksum, then install it into a temporary directory
+and confirm the module documentation loads.
 
 ```bash
-tar tzf brocade-fos-*.tar.gz | grep -E '(\.git|\.vscode|\.claude|\.ansible-lint|ruff\.toml)'   # should print nothing
-tar tzf brocade-fos-*.tar.gz | grep -c 'plugins/modules/.*\.py'                                 # module count
+sha256sum brocade-fos-<version>.tar.gz
+verify_dir=$(mktemp -d)
+ansible-galaxy collection install ./brocade-fos-<version>.tar.gz \
+  --collections-path "$verify_dir" --offline --no-deps
+ANSIBLE_COLLECTIONS_PATH="$verify_dir" ansible-doc brocade.fos.brocade_facts
+rm -rf "$verify_dir"
 ```
 
 ---
 
-## 2. Configure the hub servers (`ansible.cfg`)
+## 2. Configure the servers (`ansible.cfg`)
 
 Create or edit an `ansible.cfg` (repo-local is fine). Define **both** servers so you can switch
 between them with `--server`:
@@ -46,61 +82,73 @@ between them with `--server`:
 ```ini
 [galaxy]
 # Order matters only for installs; for publish we always pass --server explicitly.
-server_list = private_ah, rh_hosted_ah
+server_list = galaxy, rh_hosted_ah
 
-# ---- Private / on-prem Automation Hub ----
-[galaxy_server.private_ah]
-url = https://<PRIVATE_AH_HOST>/api/galaxy/content/published/
-# token is supplied via env var / CLI, NOT stored here (see below)
+# ---- Ansible Galaxy ----
+[galaxy_server.galaxy]
+url = https://galaxy.ansible.com/
+# token is supplied via --token from Ansible Vault, NOT stored here (see below)
 
 # ---- Red Hat hosted Automation Hub (console.redhat.com) ----
 [galaxy_server.rh_hosted_ah]
 url = https://console.redhat.com/api/automation-hub/content/published/
 auth_url = https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
-# token is supplied via env var / CLI, NOT stored here (see below)
+# token is supplied via --token from Ansible Vault, NOT stored here (see below)
 ```
 
-> Replace `<PRIVATE_AH_HOST>` with your Private AH hostname, e.g.
-> `automation-hub.internal.example.com`. On many Private AH installs the publish repo is
-> `published`; if your hub uses a different repository, adjust the path segment accordingly
-> (`.../content/<repo>/`).
+### Store tokens in Ansible Vault
 
-### Keep tokens out of git
+Do **not** write tokens into `ansible.cfg` or anywhere in the repository. Keep each
+token in an Ansible Vault encrypted file outside the checkout. Create each file once;
+`ansible-vault` prompts for a new vault password and opens an editor where you paste
+only the token:
 
-Do **not** write tokens into a committed `ansible.cfg`. Use one of:
+```bash
+mkdir -p ~/.ansible-secrets
+ansible-vault create ~/.ansible-secrets/galaxy_token.vault
+ansible-vault create ~/.ansible-secrets/rh_ah_token.vault
+```
 
-- Pass `--token "$TOKEN"` on the CLI (shown below), or
-- Put the token in a private, git-ignored config (e.g. `~/.ansible.cfg`), or
-- Use Ansible Vault / a secrets manager.
+Each publish section below loads its token from these files into an environment
+variable. Clear them when you finish:
+
+```bash
+unset GALAXY_TOKEN RH_AH_TOKEN
+```
+
+When a token is regenerated, replace it with
+`ansible-vault edit ~/.ansible-secrets/<file>.vault`.
 
 ---
 
-## 3A. Publish to a Private (on-prem) Automation Hub
+## 3A. Publish to Ansible Galaxy
 
-1. **Get the token:** in the Private AH web UI, go to **Collections → API token** (or
-   **Repo Management → API token**) and copy/generate the token.
+1. **Get the token:** sign in at <https://galaxy.ansible.com> with the GitHub account that
+   owns the `brocade` namespace, then open <https://galaxy.ansible.com/ui/token/> (or
+   **Collections → API token**) and copy the token.
 
 2. **Export it and publish:**
 
    ```bash
-   export PRIVATE_AH_TOKEN='<paste-token-here>'
+   export GALAXY_TOKEN="$(ansible-vault view ~/.ansible-secrets/galaxy_token.vault)"
 
    ansible-galaxy collection publish brocade-fos-<version>.tar.gz \
-     --server private_ah \
-     --token "$PRIVATE_AH_TOKEN"
+     --server galaxy \
+     --token "$GALAXY_TOKEN"
    ```
 
-   If your Private AH uses a self-signed certificate, add `--ignore-certs` (or set
-   `validate_certs = false` under the `[galaxy_server.private_ah]` section) — only if your
-   security policy permits it.
+   The command waits for the import to finish and fails if the import fails. Add
+   `--no-wait` to return immediately and check the import log in the Galaxy UI instead.
 
-3. **Approval:** the upload usually lands in a **staging** repository and may require an admin
-   to approve it before it appears under `published`. Check the AH UI → Approval / Staging.
+3. **Approval:** Galaxy has no manual approval or staging step. The version is published
+   once the automated import succeeds. Fix any import errors, bump `version:` in
+   `galaxy.yml`, then rebuild and publish again; a published version cannot be
+   re-uploaded.
 
 4. **Verify install:**
 
    ```bash
-   ansible-galaxy collection install brocade.fos -s private_ah --token "$PRIVATE_AH_TOKEN"
+   ansible-galaxy collection install brocade.fos -s galaxy
    ```
 
 ---
@@ -115,7 +163,7 @@ Do **not** write tokens into a committed `ansible.cfg`. Use one of:
 2. **Export it and publish:**
 
    ```bash
-   export RH_AH_TOKEN='<paste-offline-token-here>'
+   export RH_AH_TOKEN="$(ansible-vault view ~/.ansible-secrets/rh_ah_token.vault)"
 
    ansible-galaxy collection publish brocade-fos-<version>.tar.gz \
      --server rh_hosted_ah \
@@ -123,7 +171,7 @@ Do **not** write tokens into a committed `ansible.cfg`. Use one of:
    ```
 
 3. **Approval:** uploads go through Red Hat's staging/certification flow. The collection appears
-   under your `brocade` namespace once processing/approval completes.
+   under `brocade` namespace once processing/approval completes.
 
 4. **Verify install:**
 
@@ -138,7 +186,7 @@ Do **not** write tokens into a committed `ansible.cfg`. Use one of:
 After the release PR merges, tag the repo to match `galaxy.yml`:
 
 ```bash
-git tag v<version>        # e.g. v2.2.0
+git tag v<version>        # e.g. v1.2.3
 git push origin v<version>
 ```
 
@@ -148,12 +196,13 @@ Keep the git tag and the `galaxy.yml` `version:` in sync for every release.
 
 ## Quick reference
 
-| | Private AH | Red Hat hosted AH |
-|---|---|---|
-| `--server` name | `private_ah` | `rh_hosted_ah` |
-| `url` | `https://<PRIVATE_AH_HOST>/api/galaxy/content/published/` | `https://console.redhat.com/api/automation-hub/content/published/` |
-| `auth_url` | *(none)* | `https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token` |
-| Token source | AH UI → API token | console.redhat.com → API/offline token |
-| Token env var (example) | `PRIVATE_AH_TOKEN` | `RH_AH_TOKEN` |
+|                         | Ansible Galaxy                 | Red Hat hosted AH                                                                  |
+| ----------------------- | ------------------------------ | ---------------------------------------------------------------------------------- |
+| `--server` name         | `galaxy`                       | `rh_hosted_ah`                                                                     |
+| `url`                   | `https://galaxy.ansible.com/`  | `https://console.redhat.com/api/automation-hub/content/published/`                 |
+| `auth_url`              | *(none)*                       | `https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token` |
+| Token source            | galaxy.ansible.com → API token | console.redhat.com → API/offline token                                             |
+| Token env var (example) | `GALAXY_TOKEN`                 | `RH_AH_TOKEN`                                                                      |
+| Approval                | None (automated import)        | Red Hat staging/certification review                                               |
 
-Build once, publish the **same** `brocade-fos-<version>.tar.gz` to either hub.
+Build once, publish the **same** `brocade-fos-<version>.tar.gz` to both servers.

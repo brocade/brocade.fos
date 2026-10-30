@@ -1,5 +1,7 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 - name: Delete zones
   hosts: fos_switches
@@ -21,27 +23,27 @@
 
   tasks:
     - name: Delete cfg2, & cfg3 and leave cfg1 enabled
-      brocade_zoning_cfg:
+      brocade.fos.brocade_zoning_cfg:
         credential: "{{ credential }}"
         vfid: -1
         cfgs_to_delete: "{{ cfgs_to_delete }}"
         active_cfg: cfg1
 
     - name: Delete cfg2, & cfg3 and leave cfg_1 enabled
-      brocade_zoning_cfg:
+      brocade.fos.brocade_zoning_cfg:
         credential: "{{ credential }}"
         vfid: -1
         cfgs_to_delete: "{{ cfgs_to_delete }}"
         active_cfg: cfg_1
 
     - name: Delete alias_host_1, alias_target_1, alias_target_2 and alias_target_3
-      brocade_zoning_alias:
+      brocade.fos.brocade_zoning_alias:
         credential: "{{ credential }}"
         vfid: -1
         aliases_to_delete: "{{ aliases_to_delete }}"
 
     - name: Delete zone_1, zone_2, and zone_3
-      brocade_zoning_zone:
+      brocade.fos.brocade_zoning_zone:
         credential: "{{ credential }}"
         vfid: -1
         zones_to_delete: "{{ zones_to_delete }}"

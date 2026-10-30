@@ -1,5 +1,7 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 - name: Add zone members only
   hosts: fos_switches
@@ -25,7 +27,7 @@
     - name: >
         After zoning_zone.yml, add aa:bb:cc:dd:ee:ff:11:21 to alias_host_1 by
         specificying the addition only and setting members_add_only to True
-      brocade_zoning_alias:
+      brocade.fos.brocade_zoning_alias:
         credential: "{{ credential }}"
         vfid: -1
         members_add_only: true
@@ -34,7 +36,7 @@
     - name: >
         Add aa:bb:cc:dd:ee:ff:11:21/aa:bb:cc:dd:ee:ff:11:22 to zone_3 by
         specifying the addition only and setting members_add_only to True
-      brocade_zoning_zone:
+      brocade.fos.brocade_zoning_zone:
         credential: "{{ credential }}"
         vfid: -1
         members_add_only: true
@@ -43,7 +45,7 @@
     - name: >
         Add zone_3 to cfg_1 by specifying the addition only an setting
         members_add_only to True & leave cfg_1 enabled
-      brocade_zoning_cfg:
+      brocade.fos.brocade_zoning_cfg:
         credential: "{{ credential }}"
         vfid: -1
         members_add_only: true

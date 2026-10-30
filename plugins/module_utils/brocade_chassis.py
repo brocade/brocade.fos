@@ -1,10 +1,11 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
 
-from ansible_collections.brocade.fos.plugins.module_utils.brocade_ssh import ssh_and_configure
 from ansible_collections.brocade.fos.plugins.module_utils.brocade_url import (
     full_url_get,
     url_get_to_dict,
@@ -22,7 +23,7 @@ Brocade chassis utils
 REST_CHASSIS = "/rest/running/brocade-chassis/chassis"
 
 
-def chassis_get(login, password, fos_ip_addr, fos_version, is_https, auth, vfid, result, ssh_hostkeymust, timeout):
+def chassis_get(fos_ip_addr, is_https, auth, vfid, result, timeout):
     """
     retrieve existing switch configurations
 
@@ -47,27 +48,10 @@ def chassis_get(login, password, fos_ip_addr, fos_version, is_https, auth, vfid,
         result["msg"] = "API failed to return data"
         return -1, None
 
-    rssh, sshstr = ssh_and_configure(login, password, fos_ip_addr, ssh_hostkeymust, "timeout", "showcommand")
-    if rssh == 0:
-        if "Current IDLE Timeout is " in sshstr:
-            text = sshstr[len("Current IDLE Timeout is ") :]
-            timeout = text.split(" ")
-            rdict["Response"]["chassis"]["telnet-timeout"] = timeout[0]
-        elif "Shell Idle Timeout is " in sshstr:
-            text = sshstr[len("Shell Idle Timeout is ") :]
-            timeout = text.split(" ")
-            rdict["Response"]["chassis"]["telnet-timeout"] = timeout[0]
-        else:
-            result["failed"] = True
-            result["msg"] = "telnet_timeout returned unknown string"
-            return -1, None
-
     return 0, rdict
 
 
-def chassis_patch(
-    login, password, fos_ip_addr, fos_version, is_https, auth, vfid, result, diff_attributes, ssh_hostkeymust, timeout
-):
+def chassis_patch(fos_ip_addr, is_https, auth, vfid, result, diff_attributes, timeout):
     """
     update existing switch configurations
 
@@ -87,23 +71,6 @@ def chassis_patch(
     :rtype: list
     """
     l_diffs = diff_attributes.copy()
-
-    if "telnet-timeout" in l_diffs:
-        rssh, sshstr = ssh_and_configure(
-            login,
-            password,
-            fos_ip_addr,
-            ssh_hostkeymust,
-            "timeout " + str(l_diffs["telnet-timeout"]),
-            "Timeout will be in effect after NEXT login",
-        )
-        if rssh != 0:
-            result["failed"] = True
-            result["msg"] = "Failed to set telnet-timeout. " + sshstr
-        else:
-            result["changed"] = True
-            result["messages"] = "telnet-timeout set"
-        l_diffs.pop("telnet-timeout")
 
     if len(l_diffs) == 0:
         return 0

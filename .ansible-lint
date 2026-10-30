@@ -1,0 +1,16 @@
+profile: production
+
+exclude_paths:
+  - .github/
+  - .ansible/
+  - .mypy_cache/
+  - changelogs/
+  - docs/
+  - tests/output/
+
+kinds:
+  - playbook: "playbooks/tasks/**/*.yml"
+  - playbook: "playbooks/tasks/*.yml"
+
+warn_list:
+  - no-log-password

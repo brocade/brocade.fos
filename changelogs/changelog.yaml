@@ -1,8 +1,23 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 ancestor: null
 releases:
+  3.0.0:
+    changes:
+      release_summary: Major release that removes the SSH transport and Paramiko dependency in favor of the FOS REST API, updates module argument documentation and examples, and adds certification and regression-test workflows. See Major Changes for incompatible changes.
+      major_changes:
+      - Removed the SSH transport and ``paramiko`` dependency; all modules now use the FOS REST API only. Remove ``ssh_hostkeymust``, ``telnet_timeout``, and ``credit_recovery_mode`` from existing playbooks.
+      - Replace hyphens with underscores in nested firmwaredownload, supportsave, and scalar-operation parameter names (for example, ``user-name`` becomes ``user_name``).
+      - Switch FOS REST requests and responses from XML to JSON, removing the ``xmltodict`` dependency.
+      minor_changes:
+      - Add the Red Hat Partner Certification Checker v6.0.0 workflow for pull requests and main-branch pushes, with a required-check aggregation job.
+      - Update Automation Hub installation, support, release, and ordered manual-validation instructions.
+      - Use the Python version recorded in .python-version for release qualification and document certification targets for ansible-core 2.16 and 2.18.
+      bugfixes:
+      - brocade_operation_show_status, brocade_operation_firmwaredownload and other modules - preserve native JSON types from FOS REST responses instead of stringifying them, fixing numeric/boolean payload round-trips (for example show-status message-id polling failing with "unknown-attribute").
   2.2.0:
     release_date: '2026-06-01'
     changes:
@@ -18,10 +33,10 @@ releases:
         - vfid with no defined-configuration causes brocade_facts.py to crash - https://github.com/brocade/ansible/issues/203.
         - Meaningless "No start of json char found" error message when SAN switch cannot be connected to - https://github.com/brocade/ansible/issues/204.
         - Fix typo in brocade_ssh.py module - https://github.com/brocade/ansible/pull/188.
-        - Replaced protocol with protocol_v2 under suppportsave playbook.
-        - Fix majority of lint violations reported by ansible-lint for playbooks and ruff for python files.
+        - Replaced protocol with protocol_v2 in the supportsave playbook.
+        - Fix the majority of lint violations reported by ansible-lint for playbooks and Ruff for Python files.
       removed_features:
-        - Remove references to SNMP v1 in the documentation and playbooks since they are obsoleted from FOS 10.x.
+        - Remove references to SNMP v1 in the documentation and playbooks because they are obsolete in FOS 10.x.
       known_issues:
         - brocade_fibrechannel_configuration/fabric URI refactoring needs to be handled correctly.
   2.0.2:
@@ -51,5 +66,5 @@ releases:
         - Documentation updated in playbook to mention renaming of telnet_timeout to shell_timeout.
         - Masked logging of the password mentioned in the credentials of the playbook.
       bugfixes:
-        - Issue related to errors sometimes being ignored is fixed by throwing proper error to upper layers.
+        - Fix errors that were sometimes ignored by propagating them to higher layers.
         - Corrected typo in logical switch playbook by removing syslog.

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
@@ -8,136 +10,139 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 
 module: brocade_operation
 short_description: Brocade IPS operations
-version_added: '2.7'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
+version_added: "2.0.0"
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
-- Perform IPS operations for list of objects based on module name and list name provided
+-   Run IPS operations that take a list of entries, selected by C(module_name).
+-   Supported C(module_name) values are C(vrf), C(vlan), C(interface), C(staticArp), C(staticRoute),
+    and C(lag) for IP storage (IPS) on a logical switch with IP storage enabled, and C(configuration)
+    for traffic class configuration.
+-   The module compares C(entries) with the current list on the switch and submits each change as a
+    FOS operation, waiting up to about 16 minutes for each operation to complete.
+-   C(staticArp), C(staticRoute), and C(lag) entries are updated by deleting and recreating them.
+-   VRF C(0) and the system traffic classes C(sysTcDefault) and C(sysTcAclDeny) are never deleted.
+    Entries that change C(sysTcDefault) or C(sysTcAclDeny) cause the task to fail.
 
 options:
     credential:
         description:
-        - Login information
+        -   Login information.
         suboptions:
             fos_ip_addr:
                 description:
-                - IP address of the FOS switch
+                -   IP address of the FOS switch.
                 required: true
                 type: str
             fos_user_name:
                 description:
-                - Login name of FOS switch
+                -   Login name for the FOS switch.
                 required: true
                 type: str
             fos_password:
                 description:
-                - Password of FOS switch
+                -   Password for the FOS switch.
                 required: true
                 type: str
             https:
                 description:
-                - Encryption to use. True for HTTPS, self for self-signed HTTPS,
-                  or False for HTTP
-                choices:
-                    - True
-                    - False
-                    - self
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
                 required: true
                 type: str
-
         type: dict
         required: true
     vfid:
         description:
-        - VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   Fabric ID of the logical switch to configure. Defaults to C(128) when omitted.
         type: int
-        required: false
     throttle:
         description:
-        - Throttling delay in seconds. Enables second retry on first
-          failure.
+        -   Delay in seconds before retrying once when the switch is busy.
         type: int
     timeout:
         description:
-        - REST timeout in seconds for operations that take longer than FOS
-          default value.
+        -   REST timeout in seconds for operations that take longer than the FOS default timeout.
         type: int
     module_name:
         description:
-        - Yang module name. Hyphen or underscore are used interchangebly.
-          If the Yang module name is xy-z, either xy-z or xy_z are acceptable.
+        -   List to manage. Values are case-sensitive.
         required: true
         type: str
-    list_name:
-        description:
-        - Yang name for the list object. Hyphen or underscore are used
-          interchangebly. If the Yang list name is xy-z, either
-          xy-z or xy_z are acceptable.
-        required: true
-        type: str
-    all_entries:
-        description:
-        - Boolean to indicate if the entries specified are full
-          list of objects or not. By default, all_entries are
-          thought to be true if not specified. If all_entries
-          is set to true, the entries is used to calculate the change
-          of existing entryies, addition, and deletion. If
-          all_entries is set to false, the entries is used to
-          calculate the change of existing entries and addition
-          of entries only. i.e.  the module will not attempt to
-          delete objects that do not show up in the entries.
-        required: false
-        type: bool
+        choices: [vrf, vlan, interface, staticArp, staticRoute, lag, configuration]
     entries:
         description:
-        - List of objects. Name of each attributes within
-          each entries should match the Yang name except hyphen
-          is replaced with underscore. Using hyphen in the name
-          may result in errenously behavior based on Ansible
-          parsing.
+        -   Desired entries for the selected list. Attribute names match the YANG leaf names of that
+            list, for example C(vrfID) and C(dhcpEnabled) for C(vrf).
         required: true
         type: list
-
+        elements: raw
+    all_entries:
+        description:
+        -   Whether C(entries) specifies the complete desired list. When true, the module adds, updates,
+            and deletes entries to match C(entries). When false, the module adds or updates the specified
+            entries and preserves entries omitted from C(entries).
+        -   Defaults to true when omitted, so entries not listed are deleted.
+        type: bool
 """
 
 
-EXAMPLES = """
-
-  gather_facts: False
-
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
   vars:
     credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
+      fos_ip_addr: '{{ fos_ip_addr }}'
       fos_user_name: user_name
       fos_password: user_password
-      https: False
-
+      https: "false"
   tasks:
-
-  - name: list object example
-    brocade_list_obj:
-      credential: "{{credential}}"
-      vfid: -1
-      module_name: "brocade-snmp"
-      list_name: "v3-account"
-      all_entries: False
-      entries:
-        - index: 1
-          community_name: "new name"
-
-
+    - name: Configure IP storage VRFs
+      brocade.fos.brocade_operation:
+        credential: '{{ credential }}'
+        vfid: 9
+        module_name: vrf
+        all_entries: false
+        entries:
+          - vrfID: 28
+          - vrfID: 33
+            dhcpEnabled: true
+            dhcpServer: 198.51.100.100
 """
 
 
-RETURN = """
+RETURN = r"""
 
-msg:
-    description: Success message
-    returned: success
-    type: str
+current_entries:
+    description: Entries read from the switch before changes, excluding those deleted and recreated.
+    returned: when the switch list is read
+    type: list
+    elements: dict
+add_entries:
+    description: Entries submitted for creation.
+    returned: when the switch list is read
+    type: list
+    elements: dict
+diff_entries:
+    description: Changes submitted for existing entries.
+    returned: when the switch list is read
+    type: list
+    elements: dict
+delete_entries:
+    description: Entries not in C(entries). They are deleted only when C(all_entries) is true.
+    returned: when the switch list is read
+    type: list
+    elements: dict
+response:
+    description: Raw REST response for the current list, or an error message.
+    returned: when the switch list is read
+    type: raw
 
 """
 
@@ -165,14 +170,17 @@ def main():
                 fos_user_name=dict(required=True, type="str"),
                 fos_password=dict(required=True, type="str", no_log=True),
                 https=dict(required=True, type="str"),
-                ssh_hostkeymust=dict(required=False, type="bool"),
             ),
         ),
         vfid=dict(required=False, type="int"),
         throttle=dict(required=False, type="int"),
         timeout=dict(required=False, type="int"),
-        module_name=dict(required=True, type="str"),
-        entries=dict(required=True, type="list"),
+        module_name=dict(
+            required=True,
+            type="str",
+            choices=["vrf", "vlan", "interface", "staticArp", "staticRoute", "lag", "configuration"],
+        ),
+        entries=dict(required=True, type="list", elements="raw"),
         all_entries=dict(required=False, type="bool"),
     )
 
@@ -185,9 +193,6 @@ def main():
     fos_user_name = input_params["credential"]["fos_user_name"]
     fos_password = input_params["credential"]["fos_password"]
     https = input_params["credential"]["https"]
-    ssh_hostkeymust = True
-    if "ssh_hostkeymust" in input_params["credential"]:
-        ssh_hostkeymust = input_params["credential"]["ssh_hostkeymust"]
     throttle = input_params["throttle"]
     timeout = input_params["timeout"]
     vfid = input_params["vfid"]
@@ -225,7 +230,6 @@ def main():
         fos_user_name,
         fos_password,
         https,
-        ssh_hostkeymust,
         throttle,
         vfid,
         module_name,

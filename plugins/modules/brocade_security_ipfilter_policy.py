@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
@@ -8,122 +10,105 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 
 module: brocade_security_ipfilter_policy
 short_description: Brocade Fibre Channel security ipfilter policy configuration
-version_added: '2.7'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
+version_added: "1.3.0"
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
-- Update Fibre Channel security ipfilter policy configuration
+-   Update Fibre Channel security ipfilter policy configuration.
 
 options:
     credential:
         description:
-        - Login information
+        -   Login information.
         suboptions:
             fos_ip_addr:
                 description:
-                - IP address of the FOS switch
+                -   IP address of the FOS switch.
                 required: true
                 type: str
             fos_user_name:
                 description:
-                - Login name of FOS switch
+                -   Login name for the FOS switch.
                 required: true
                 type: str
             fos_password:
                 description:
-                - Password of FOS switch
+                -   Password for the FOS switch.
                 required: true
                 type: str
             https:
                 description:
-                - Encryption to use. True for HTTPS, self for self-signed HTTPS,
-                  or False for HTTP
-                choices:
-                    - True
-                    - False
-                    - self
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
                 required: true
                 type: str
-
         type: dict
         required: true
     vfid:
         description:
-        - VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
         type: int
-        required: false
     throttle:
         description:
-        - Throttling delay in seconds. Enables second retry on first
-          failure.
+        -   Delay in seconds before retrying once when the switch is busy.
         type: int
     timeout:
         description:
-        - REST timeout in seconds for operations that take longer than FOS
-          default value.
+        -   REST timeout in seconds for operations that take longer than the FOS default timeout.
         type: int
     ipfilter_policies:
         description:
-        - List of ipfilter policies data structure.
-          All writable attributes supported
-          by BSN REST API with - replaced with _.
-        required: false
+        -   List of IP-filter policies. Supports all writable attributes exposed by the BSN REST API,
+            with hyphens replaced by underscores.
         type: list
+        elements: raw
     active_policy:
         description:
-        - Name of the active policy. Mutually exclusive
-          with ipfilter_policies and delete_policy.
-          This shoud come after policies are created and
-          filled with rules
-        required: false
+        -   Name of the active policy. Mutually exclusive with ipfilter_policies and delete_policy.
+            Activate the policy after creating it and adding its rules.
         type: str
     delete_policies:
         description:
-        - Name of the policy to be deleted. Mutually exclusive
-          with ipfilter_policies and active_policy.
-        required: false
+        -   Name of the policy to be deleted. Mutually exclusive with ipfilter_policies and active_policy.
         type: list
-
+        elements: raw
 """
 
 
-EXAMPLES = """
-
-
-  gather_facts: False
-
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
   vars:
     credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
+      fos_ip_addr: '{{ fos_ip_addr }}'
       fos_user_name: user_name
       fos_password: user_password
-      https: False
-
+      https: "false"
   tasks:
-
-  - name: activate default ipv4 before deleting previously created custom policy
-    brocade_security_ipfilter_policy:
-      credential: "{{credential}}"
-      vfid: -1
-      active_policy: "default_ipv4"
-
-  - name: delete custom policy
-    brocade_security_ipfilter_policy:
-      credential: "{{credential}}"
-      vfid: -1
-      delete_policies:
-        - name: "ipv4_telnet_http"
-
+    - name: Activate default ipv4 before deleting previously created custom policy
+      brocade.fos.brocade_security_ipfilter_policy:
+        credential: '{{ credential }}'
+        vfid: -1
+        active_policy: default_ipv4
+    - name: Delete custom policy
+      brocade.fos.brocade_security_ipfilter_policy:
+        credential: '{{ credential }}'
+        vfid: -1
+        delete_policies:
+          - name: Ipv4_telnet_http
 """
 
 
-RETURN = """
+RETURN = r"""
 
 msg:
-    description: Success message
+    description: Success message.
     returned: success
     type: str
 
@@ -160,15 +145,14 @@ def main():
                 fos_user_name=dict(required=True, type="str"),
                 fos_password=dict(required=True, type="str", no_log=True),
                 https=dict(required=True, type="str"),
-                ssh_hostkeymust=dict(required=False, type="bool"),
             ),
         ),
         vfid=dict(required=False, type="int"),
         throttle=dict(required=False, type="int"),
         timeout=dict(required=False, type="int"),
-        ipfilter_policies=dict(required=False, type="list"),
+        ipfilter_policies=dict(required=False, type="list", elements="raw"),
         active_policy=dict(required=False, type="str"),
-        delete_policies=dict(required=False, type="list"),
+        delete_policies=dict(required=False, type="list", elements="raw"),
     )
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -199,7 +183,6 @@ def main():
             fos_user_name,
             fos_password,
             https,
-            True,
             throttle,
             vfid,
             "brocade_security",
@@ -218,7 +201,6 @@ def main():
             fos_user_name,
             fos_password,
             https,
-            True,
             throttle,
             vfid,
             "brocade_security",

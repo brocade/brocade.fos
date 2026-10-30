@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
@@ -8,103 +10,93 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 
 module: brocade_fabric_switch_facts_by_pid
 short_description: Brocade Fibre Channel switch find by connected device's pid
-version_added: '2.7'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
+version_added: "1.3.0"
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
-- Fibre Channel switch find by connected device's PID
+-   Fibre Channel switch find by connected device's PID.
 
 options:
     credential:
         description:
-        - Login information
+        -   Login information.
         suboptions:
             fos_ip_addr:
                 description:
-                - IP address of the FOS switch
+                -   IP address of the FOS switch.
                 required: true
                 type: str
             fos_user_name:
                 description:
-                - Login name of FOS switch
+                -   Login name for the FOS switch.
                 required: true
                 type: str
             fos_password:
                 description:
-                - Password of FOS switch
+                -   Password for the FOS switch.
                 required: true
                 type: str
             https:
                 description:
-                - Encryption to use. True for HTTPS, self for self-signed HTTPS,
-                  or False for HTTP
-                choices:
-                    - True
-                    - False
-                    - self
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
                 required: true
                 type: str
-
         type: dict
         required: true
     vfid:
         description:
-        - VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
         type: int
-        required: false
     throttle:
         description:
-        - Throttling delay in seconds. Enables second retry on first
-          failure.
-        required: false
+        -   Delay in seconds before retrying once when the switch is busy.
         type: int
     timeout:
         description:
-        - REST timeout in seconds for operations that take longer than FOS
-          default value.
+        -   REST timeout in seconds for operations that take longer than the FOS default timeout.
         type: int
     pid:
         description:
-        - Pid of the device
+        -   Pid of the device.
         required: true
         type: str
-
 """
 
 
-EXAMPLES = """
-
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
   vars:
     credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
+      fos_ip_addr: '{{ fos_ip_addr }}'
       fos_user_name: user_name
       fos_password: user_password
-      https: False
-    pid_to_search: "0x140000"
-
+      https: "false"
+    pid_to_search: '0x140000'
   tasks:
-
-  - name: gather device alias info
-    brocade_fabric_switch_facts_by_pid:
-      credential: "{{credential}}"
-      vfid: -1
-      pid: "{{pid_to_search}}"
-
-  - name: print fabric switch information matching pid
-    debug:
-      var: ansible_facts['fabric_switch']
-    when: ansible_facts['fabric_switch'] is defined
-
+    - name: Gather device alias info
+      brocade.fos.brocade_fabric_switch_facts_by_pid:
+        credential: '{{ credential }}'
+        vfid: -1
+        pid: '{{ pid_to_search }}'
+    - name: Print fabric switch information matching pid
+      when: ansible_facts['fabric_switch'] is defined
+      ansible.builtin.debug:
+        var: ansible_facts['fabric_switch']
 """
 
 
-RETURN = """
+RETURN = r"""
 
 msg:
-    description: Success message
+    description: Success message.
     returned: success
     type: str
 
@@ -136,7 +128,6 @@ def main():
                 fos_user_name=dict(required=True, type="str"),
                 fos_password=dict(required=True, type="str", no_log=True),
                 https=dict(required=True, type="str"),
-                ssh_hostkeymust=dict(required=False, type="bool"),
             ),
         ),
         vfid=dict(required=False, type="int"),
@@ -145,7 +136,7 @@ def main():
         pid=dict(required=True, type="str"),
     )
 
-    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     input_params = module.params
 
@@ -154,9 +145,6 @@ def main():
     fos_user_name = input_params["credential"]["fos_user_name"]
     fos_password = input_params["credential"]["fos_password"]
     https = input_params["credential"]["https"]
-    ssh_hostkeymust = True
-    if "ssh_hostkeymust" in input_params["credential"]:
-        ssh_hostkeymust = input_params["credential"]["ssh_hostkeymust"]
     throttle = input_params["throttle"]
     timeout = input_params["timeout"]
     vfid = input_params["vfid"]
@@ -169,10 +157,6 @@ def main():
     ret_code, auth, fos_version = login(fos_ip_addr, fos_user_name, fos_password, https, throttle, result, timeout)
     if ret_code != 0:
         module.exit_json(**result)
-
-    facts = {}
-
-    facts["ssh_hostkeymust"] = ssh_hostkeymust
 
     module_name = "brocade_fabric"
     list_name = "fabric_switch"
@@ -188,7 +172,6 @@ def main():
         auth,
         vfid,
         result,
-        ssh_hostkeymust,
         timeout,
     )
     if ret_code != 0:

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
@@ -11,83 +13,104 @@ __metaclass__ = type
 ANSIBLE_METADATA = {"metadata_version": "1.1", "status": ["preview"], "supported_by": "certified"}
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 
 module: brocade_maps_maps_policy
 short_description: Brocade Fibre Channel MAPS policy configuration
-version_added: '2.7'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
+version_added: "1.3.0"
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
-- Update Fibre Channel MAPS policy
+-   Update Fibre Channel MAPS policy.
 
 options:
 
     credential:
         description:
-        - login information including
-          fos_ip_addr - ip address of the FOS switch
-          fos_user_name - login name of FOS switch REST API
-          fos_password - password of FOS switch REST API
-          https - True for HTTPS, self for self-signed HTTPS, or False for HTTP
+        -   Login information for the FOS switch REST API.
         type: dict
         required: true
+        suboptions:
+            fos_ip_addr:
+                description:
+                -   IP address or hostname of the FOS switch.
+                type: str
+                required: true
+            fos_user_name:
+                description:
+                -   Switch login username.
+                type: str
+                required: true
+            fos_password:
+                description:
+                -   Switch login password.
+                type: str
+                required: true
+            https:
+                description:
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
+                type: str
+                required: true
     vfid:
         description:
-        - vfid of the switch to target. The value can be -1 for
-          FOS without VF enabled. For VF enabled FOS, a valid vfid
-          should be given
-        required: false
+        -   VFID of the target switch. Use -1 for FOS without virtual fabrics enabled. For FOS with virtual
+            fabrics enabled, specify a valid VFID.
+        type: int
     throttle:
         description:
-        - rest throttling delay in seconds to retry once more if
-          server is busy.
-        required: false
+        -   Delay in seconds before retrying once when the switch is busy.
+        type: int
     timeout:
         description:
-        - rest timeout in seconds for operations taking longer than
-          default timeout.
-        required: false
+        -   REST timeout in seconds for operations that take longer than the default timeout.
+        type: int
+    all_entries:
+        description:
+        -   Whether entries specifies the complete desired list of objects. When true, the module adds,
+            updates, and deletes objects to match entries. When false, the module adds or updates the
+            specified objects and preserves objects omitted from entries.
+        type: bool
     maps_policies:
         description:
-        - list of policies to be updated. All writable attributes supported
-          by BSN REST API with - replaced with _.
+        -   List of policies to be updated. Supports all writable attributes exposed by the BSN REST API,
+            with hyphens replaced by underscores.
         required: true
-
+        type: list
+        elements: raw
 """
 
 
-EXAMPLES = """
-
-  gather_facts: False
-
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
   vars:
     credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
+      fos_ip_addr: '{{ fos_ip_addr }}'
       fos_user_name: user_name
       fos_password: user_password
-      https: False
+      https: "false"
   tasks:
-
-
-  - name: maps policies
-    brocade_maps_maps_policy:
-    credential: "{{credential}}"
-    vfid: -1
-    map_policies:
-      - name: my_policy
-        is_active_policy: False
-        rule_list:
-          rule:
-            - my_rule1
-            - my_rule2
-
+    - name: Maps policies
+      brocade.fos.brocade_maps_maps_policy:
+        credential: '{{ credential }}'
+        vfid: -1
+        map_policies:
+          - name: My_policy
+            is_active_policy: false
+            rule_list:
+              rule:
+                - my_rule1
+                - my_rule2
 """
 
 
-RETURN = """
+RETURN = r"""
 
 msg:
-    description: Success message
+    description: Success message.
     returned: success
     type: str
 
@@ -117,14 +140,13 @@ def main():
                 fos_user_name=dict(required=True, type="str"),
                 fos_password=dict(required=True, type="str", no_log=True),
                 https=dict(required=True, type="str"),
-                ssh_hostkeymust=dict(required=False, type="bool"),
             ),
         ),
         vfid=dict(required=False, type="int"),
         throttle=dict(required=False, type="int"),
         timeout=dict(required=False, type="int"),
         all_entries=dict(required=False, type="bool"),
-        maps_policies=dict(required=True, type="list"),
+        maps_policies=dict(required=True, type="list", elements="raw"),
     )
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -149,7 +171,6 @@ def main():
         fos_user_name,
         fos_password,
         https,
-        True,
         throttle,
         vfid,
         "brocade_maps",

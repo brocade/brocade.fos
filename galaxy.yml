@@ -1,9 +1,11 @@
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 namespace: brocade
 name: fos
-version: 2.2.0
+version: 3.0.0
 readme: README.md
 authors:
   - Brocade Automation Team <Automation.BSN@broadcom.com>
@@ -20,20 +22,33 @@ tags:
   - fibre_channel
   - fc
 dependencies: {}
-repository: https://github.com/brocade/ansible
-documentation: https://galaxy.ansible.com/ui/repo/published/brocade/fos/docs/
-homepage: https://github.com/brocade/ansible
-issues: https://github.com/brocade/ansible/issues
+repository: https://github.com/brocade/brocade.fos
+documentation: https://github.com/brocade/brocade.fos/blob/main/README.md
+homepage: https://github.com/brocade/brocade.fos
+issues: https://github.com/brocade/brocade.fos/issues
 build_ignore:
   - .git*
   - .vscode
+  - .devcontainer
   - .claude
   - CLAUDE.md
   - .ansible-lint
+  - .ansible
+  - .mypy_cache
+  - .pytest_cache
+  - .ruff_cache
+  - .tox
+  - .venv
+  - .python-version
   - ruff.toml
   - dev-requirements.txt
+  - hacking
   - changelogs/fragments
   - changelogs/config.yaml
   - tests/output
+  - tests/sanity/*.log
+  - importer_result.json
+  - __pycache__
+  - "*.pyc"
   - "*.tar.gz"
   - ansible_collections

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Copyright 2019-2026 Broadcom. All rights reserved.
 # The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt) AND BSD-2-Clause
+# SPDX-License-Identifier: GPL-3.0-or-later AND BSD-2-Clause
 
 
 from __future__ import absolute_import, division, print_function
@@ -8,98 +10,125 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 
 module: brocade_security_sshutil_public_key_action
 short_description: Brocade Fibre Channel public key export or import
-version_added: '2.7'
-author: Broadcom BSN Ansible Team <Automation.BSN@broadcom.com>
+version_added: "1.3.0"
+author: Broadcom BSN Ansible Team (@brocade) <Automation.BSN@broadcom.com>
 description:
-- Use to export or import public keys
+-   Use to export or import public keys.
 
 options:
     credential:
         description:
-        - Login information
+        -   Login information.
         suboptions:
             fos_ip_addr:
                 description:
-                - IP address of the FOS switch
+                -   IP address of the FOS switch.
                 required: true
                 type: str
             fos_user_name:
                 description:
-                - Login name of FOS switch
+                -   Login name for the FOS switch.
                 required: true
                 type: str
             fos_password:
                 description:
-                - Password of FOS switch
+                -   Password for the FOS switch.
                 required: true
                 type: str
             https:
                 description:
-                - Encryption to use. True for HTTPS, self for self-signed HTTPS,
-                  or False for HTTP
-                choices:
-                    - True
-                    - False
-                    - self
+                -   Connection mode, supplied as a string.
+                -   C(true) uses HTTPS with certificate validation.
+                -   C(self) uses HTTPS without certificate validation, allowing self-signed certificates.
+                -   C(false) uses unencrypted HTTP.
                 required: true
                 type: str
-
         type: dict
         required: true
     vfid:
         description:
-        - VFID of the switch. Use -1 for FOS without VF enabled or AG.
+        -   VFID of the switch. Use -1 for FOS without VF enabled or AG.
         type: int
-        required: false
     throttle:
         description:
-        - Throttling delay in seconds. Enables second retry on first
-          failure.
+        -   Delay in seconds before retrying once when the switch is busy.
         type: int
     timeout:
         description:
-        - REST timeout in seconds for operations that take longer than FOS
-          default value.
+        -   REST timeout in seconds for operations that take longer than the FOS default timeout.
         type: int
     action_inputs:
         description:
-        - Action attributes
+        -   Action attributes.
         required: true
         type: dict
-
+        suboptions:
+            remote_user_name:
+                description:
+                -   User name on the remote host. Used with security_certificate_action,
+                    sshutil_public_key_action, and sec_crypto_cfg_template_action objects.
+                type: str
+            remote_host_ip:
+                description:
+                -   IP address of the remote host for file transfer. Used with security_certificate_action,
+                    sshutil_public_key_action, and sec_crypto_cfg_template_action objects.
+                type: str
+            remote_user_password:
+                description:
+                -   Password for the remote host user. Encoded automatically by the module. Not logged. Used
+                    with security_certificate_action, sshutil_public_key_action, and
+                    sec_crypto_cfg_template_action objects.
+                type: str
+            remote_directory:
+                description:
+                -   Directory on the remote server.
+                type: str
+            user_name:
+                description:
+                -   Remote server or switch username, as applicable to this operation.
+                type: str
+            public_key_name:
+                description:
+                -   SSH public key file name. Used with brocade_security sshutil_public_key_action object.
+                type: str
+            action:
+                description:
+                -   Action to perform for license operations. One of install, remove, or export.
+                type: str
+            protocol:
+                description:
+                -   Transfer protocol supported by the FOS operation.
+                type: str
 """
 
 
-EXAMPLES = """
-
-  gather_facts: False
-
+EXAMPLES = r"""
+- name: Manage Brocade FOS resources
+  hosts: fos_switches
+  gather_facts: false
   vars:
     credential:
-      fos_ip_addr: "{{fos_ip_addr}}"
+      fos_ip_addr: '{{ fos_ip_addr }}'
       fos_user_name: user_name
       fos_password: user_password
-      https: False
-
+      https: "false"
   tasks:
-
-  - name: public key import or export
-    brocade_security_sshutil_public_key_action:
-      credential: "{{credential}}"
-      vfid: -1
-      action_inputs:
-
+    - name: Public key import or export
+      brocade.fos.brocade_security_sshutil_public_key_action:
+        credential: '{{ credential }}'
+        vfid: -1
+        action_inputs: '{{ action_inputs }}'
 """
 
 
-RETURN = """
+RETURN = r"""
 
 msg:
-    description: Success message
+    description: Success message.
     returned: success
     type: str
 
@@ -129,7 +158,6 @@ def main():
                 fos_user_name=dict(required=True, type="str"),
                 fos_password=dict(required=True, type="str", no_log=True),
                 https=dict(required=True, type="str"),
-                ssh_hostkeymust=dict(required=False, type="bool"),
             ),
         ),
         vfid=dict(required=False, type="int"),
@@ -160,9 +188,6 @@ def main():
     fos_user_name = input_params["credential"]["fos_user_name"]
     fos_password = input_params["credential"]["fos_password"]
     https = input_params["credential"]["https"]
-    ssh_hostkeymust = True
-    if "ssh_hostkeymust" in input_params["credential"]:
-        ssh_hostkeymust = input_params["credential"]["ssh_hostkeymust"]
     throttle = input_params["throttle"]
     timeout = input_params["timeout"]
     vfid = input_params["vfid"]
@@ -175,7 +200,6 @@ def main():
         fos_user_name,
         fos_password,
         https,
-        ssh_hostkeymust,
         throttle,
         vfid,
         "brocade_security",
