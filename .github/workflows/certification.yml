@@ -63,7 +63,7 @@ jobs:
       matrix:
         core: [stable-2.16, stable-2.18, stable-2.20]
     steps:
-      - name: Run module regression tests
+      - name: Run unit tests
         # Same pinned test action used by certification checker v6.0.0.
         uses: ansible-community/ansible-test-gh-action@9cdbd323f59530c0f43669f1168c8ef4a8c06d41
         with:

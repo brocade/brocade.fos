@@ -118,9 +118,27 @@ hacking/run_checks.sh --build-collection --build-docs
 
 Use either flag on its own when needed. Installation, artifacts, and generated
 HTML stay in the test workspace; the script prints the documentation path.
-Use `hacking/run_checks.sh --help` for options. To build the documentation
-directly from the source checkout instead, follow
-[docs/documentation.rst](https://github.com/brocade/brocade.fos/blob/main/docs/documentation.rst).
+Use `hacking/run_checks.sh --help` for options.
+
+To build only the documentation from the source checkout, without a test workspace:
+
+```bash
+hacking/build_docs.sh
+```
+
+The script builds and installs the collection, then runs `antsibull-docs sphinx-init`
+and the generated `build.sh`. Open `tests/output/docs/build/html/index.html` to view
+the result.
+
+Documentation sources:
+
+- Module and plugin pages come from each plugin's `DOCUMENTATION`, `EXAMPLES`, and
+  `RETURN` blocks.
+- Guides are Markdown files directly in `docs/`
+- `docs/docsite/links.yml` links the guides and other repository documents from the
+  collection index. 
+- `docs/docsite/rst/changelog.rst` is a symlink to `CHANGELOG.rst`.
+- Add a page to `docs/docsite/extra-docs.yml` only as an RST file in `docs/docsite/rst/`.
 
 ### Adding, Editing, or Removing Tests
 

@@ -16,18 +16,20 @@ Major Changes
 -------------
 
 - Removed the SSH transport and ``paramiko`` dependency; all modules now use the FOS REST API only. Remove ``ssh_hostkeymust``, ``telnet_timeout``, and ``credit_recovery_mode`` from existing playbooks.
-- Switch FOS REST requests and responses from XML to JSON, removing the ``xmltodict`` dependency.
+- Reorganized the collection layout, documentation, and tests to follow Ansible collection standards.
 - Replace hyphens with underscores in nested firmwaredownload, supportsave, and scalar-operation parameter names (for example, ``user-name`` becomes ``user_name``).
+- Switch FOS REST requests and responses from XML to JSON, removing the ``xmltodict`` dependency.
 
 Minor Changes
 -------------
 
 - Add the Red Hat Partner Certification Checker v6.0.0 workflow for pull requests and main-branch pushes, with a required-check aggregation job.
-- Update Automation Hub installation, support, release, and ordered manual-validation instructions.
 
 Bugfixes
 --------
 
+- brocade_facts - make ``gather_subset`` optional with a default of ``all``, as documented, instead of failing with "missing required arguments - gather_subset" (https://github.com/brocade/ansible/issues/210).
+- brocade_list_obj_facts - document the ``list_name`` option in place of ``obj_name`` to match the module argument specification (https://github.com/brocade/ansible/issues/183).
 - brocade_operation_show_status, brocade_operation_firmwaredownload and other modules - preserve native JSON types from FOS REST responses instead of stringifying them, fixing numeric/boolean payload round-trips (for example show-status message-id polling failing with "unknown-attribute").
 
 v2.2.0

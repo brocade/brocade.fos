@@ -5,7 +5,7 @@
 
 add_plugin_period: true
 changelog_nice_yaml: false
-changelog_sort: alphanumerical
+changelog_sort: version_reversed
 changes_file: changelog.yaml
 changes_format: combined
 ignore_other_fragment_extensions: true

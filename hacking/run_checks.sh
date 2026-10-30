@@ -16,7 +16,7 @@ Run lint/header checks, all unit tests, and Ansible sanity checks.
   --list              Show check options, descriptions, and unit test files.
   --only NAME         Run one check from the summary in a fresh workspace.
   --build-collection  Also build and install the artifact in the test workspace.
-  --build-docs        Also build the Sphinx HTML documentation.
+  --build-docs        Also build the HTML documentation with antsibull-docs.
   -h, --help          Show this usage information.
 USAGE
 }
@@ -184,7 +184,7 @@ if [[ "$list_checks" == true || "$build_collection" == true || "$only_check" == 
     run_check collection_build 'Build and install the collection artifact (optional).' build_local_collection
 fi
 if [[ "$list_checks" == true || "$build_docs" == true || "$only_check" == documentation_build ]]; then
-    run_check documentation_build 'Build Sphinx HTML documentation (optional).' bash docs/build.sh
+    run_check documentation_build 'Build HTML documentation with antsibull-docs (optional).' bash hacking/build_docs.sh
 fi
 
 if [[ "$list_checks" == true ]]; then
@@ -207,8 +207,8 @@ for index in "${!check_names[@]}"; do
     printf '%-22s %-4s (exit %s)\n' "${check_names[$index]}" "$check_status" "${check_codes[$index]}"
 done
 printf '\nWorkspace retained: %s\nLogs: %s\n' "$test_collection_root" "$checks_log_dir"
-if [[ -f "$test_collection_root/docs/build/html/index.html" ]]; then
-    printf 'Documentation: %s/docs/build/html/index.html\n' "$test_collection_root"
+if [[ -f "$test_collection_root/tests/output/docs/build/html/index.html" ]]; then
+    printf 'Documentation: %s/tests/output/docs/build/html/index.html\n' "$test_collection_root"
 fi
 if [[ "$overall_status" -ne 0 ]]; then
     printf '\nRerun failed checks individually using your current source files:\n'
