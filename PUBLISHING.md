@@ -28,6 +28,21 @@ Before building:
    needs external Python packages, update the **Requirements** section of
    [README.md](README.md) to match. Red Hat certification requires the README
    to state the minimum Python version and any external dependencies.
+
+   Each version file answers a different question. Change only the ones the
+   release requires, and do not copy the tested versions into the support floors:
+
+   | File and key                          | Meaning                                   | Update when                                                  |
+   | ------------------------------------- | ----------------------------------------- | ------------------------------------------------------------ |
+   | `galaxy.yml` `version:`               | Release version (three-part semver)       | Every release                                                |
+   | `versioning.md` newest row            | FOS, ansible-core, and Python tested      | Every release                                                |
+   | `meta/runtime.yml` `requires_ansible` | Minimum supported ansible-core            | Support is deliberately raised or dropped, not for new tests |
+   | `tests/config.yml` `python_requires`  | Python range for controller tests         | Support is deliberately raised or dropped                    |
+   | `.python-version`                     | Python used by `hacking/` and CI          | `python_requires` changes; keep it inside that range         |
+
+   If `requires_ansible` or `python_requires` changes, also run
+   `hacking/run_checks.sh` and repeat live-switch validation on the lowest and
+   highest supported combinations.
 4. Remove duplicate pending fragments in `changelogs/fragments/`.
 5. Validate the fragments and incorporate them into the release:
 

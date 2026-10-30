@@ -19,7 +19,7 @@ commas. The newest release must stay in the first row.
 
 | brocade.fos | GA Date           | FOS                       | ansible-core | Python  | Notes |
 | ----------- | ----------------- | ------------------------- | ------------ | ------- | ----- |
-| v3.0.0      | October 30, 2026  | v10.0.1, v9.2.2d          | v2.19.8      | v3.12.3 |       |
+| v3.0.0      | October 30, 2026  | v10.0.1, v9.2.2d          | v2.21.1      | v3.12.3 |       |
 | v2.1.0      | April 30, 2026    | v10.0.0a, v9.2.2c         | v2.19.8      | v3.11.0 |       |
 | v2.0.2      | December 11, 2025 | v9.2.2b                   | v2.11.12     | v3.11.0 |       |
 | v2.0.1      | October 8, 2025   | v9.2.1c, v9.2.2a          | v2.11.12     | v3.11.0 |       |

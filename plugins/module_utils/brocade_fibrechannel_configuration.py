@@ -83,7 +83,9 @@ def fabric_get(fos_ip_addr, is_https, auth, vfid, result, timeout):
             leaf_url = full_fabric_url + "/" + attr
             l_rtype, l_rdict = url_get_to_dict(fos_ip_addr, is_https, auth, vfid, result, leaf_url, timeout)
             if l_rtype == 0:
-                val = l_rdict.get("Response", {}).get(attr)
+                # FOS wraps the leaf as Response.fabric.<attr>; accept a flat Response.<attr> too.
+                l_resp = l_rdict.get("Response", {})
+                val = l_resp.get("fabric", l_resp).get(attr)
 
         if val is not None:
             if attr in [
