@@ -34,7 +34,7 @@ releases:
     - json-scalar-roundtrip.bugfix.yaml
     - list-obj-facts-doc-list-name.bugfix.yaml
     - remove-paramiko.breaking_changes.yaml
-    release_date: '2026-10-30'
+    release_date: '2026-11-09'
   2.2.0:
     changes:
       release_summary: Deprecate galaxy branch and convert master to galaxy instead.
