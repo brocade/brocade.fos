@@ -38,7 +38,7 @@ Before building:
    | `versioning.md` newest row            | FOS, ansible-core, and Python tested      | Every release                                                |
    | `meta/runtime.yml` `requires_ansible` | Minimum supported ansible-core            | Support is deliberately raised or dropped, not for new tests |
    | `tests/config.yml` `python_requires`  | Python range for controller tests         | Support is deliberately raised or dropped                    |
-   | `.python-version`                     | Python used by `hacking/` and CI          | `python_requires` changes; keep it inside that range         |
+   | `.python-version`                     | Python used by `hacking/` (local dev)     | `python_requires` changes; keep it inside that range         |
 
    If `requires_ansible` or `python_requires` changes, also run
    `hacking/run_checks.sh` and repeat live-switch validation on the lowest and
